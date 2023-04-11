@@ -1,0 +1,20 @@
+CSC365 Class Project
+
+Team Members:
+Patrick Whitlock  pwhitloc@calpoly.edu
+Ashton Alonge     aalonge@calpoly.edu
+Ziaden            
+
+Project proposal: Soccer Player Statistics Database
+
+
+description:
+    Keeps track of various soccer player statistics, players
+    could be added, removed, and edited via the api. 
+
+    Each player would have:
+        amount of games played
+        amount of goals
+        amount of assists
+        amount of shots
+        amount of shots on goal
