@@ -1,8 +1,0 @@
-Technical Specifications
-
-5 endpoints:
-  Add player
-  Remove player
-  Compare player statistics
-  Edit player statistics
-  List top n players by x statistic
