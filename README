@@ -4,16 +4,7 @@ Team Members:
 Patrick Whitlock  pwhitloc@calpoly.edu
 Ashton Alonge     aalonge@calpoly.edu          
 
-Project proposal: Soccer Player Statistics Database
+Project proposal: Fantasy Soccer API
 
-
-description:
-    Keeps track of various soccer player statistics, players
-    could be added, removed, and edited via the api. 
-
-    Each player would have:
-        amount of games played
-        amount of goals
-        amount of assists
-        amount of shots
-        amount of shots on goal
+Users can make teams, pick players with statistics based on real
+life performances, and join a fantasy league to compete with their friends.
