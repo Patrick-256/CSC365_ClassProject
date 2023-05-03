@@ -25,16 +25,20 @@ from sqlalchemy import MetaData, Table, Column, Integer, String, Float
 # metadata = MetaData()
 
 metadata_obj = sqlalchemy.MetaData()
-movies = sqlalchemy.Table("movies", metadata_obj, autoload_with=engine)
-characters = sqlalchemy.Table("characters", metadata_obj, autoload_with=engine)
-conversations = sqlalchemy.Table("conversations", metadata_obj, autoload_with=engine)
-lines = sqlalchemy.Table("lines", metadata_obj, autoload_with=engine)
+users = sqlalchemy.Table("users", metadata_obj, autoload_with=engine)
+fantasy_leagues = sqlalchemy.Table("fantasy_leagues", metadata_obj, autoload_with=engine)
+friends = sqlalchemy.Table("friends", metadata_obj, autoload_with=engine)
+fantasy_teams = sqlalchemy.Table("fantasy_teams", metadata_obj, autoload_with=engine)
+players = sqlalchemy.Table("players", metadata_obj, autoload_with=engine)
+games = sqlalchemy.Table("games", metadata_obj, autoload_with=engine)
 
 
-# Access the "title" column of the "movies" table using db.movies.c.title
+
 db = {
-    "movies": movies,
-    "characters":characters,
-    "conversations":conversations,
-    "lines":lines,
+    "users": users,
+    "fantasy_leagues":fantasy_leagues,
+    "friends":friends,
+    "fantasy_teams":fantasy_teams,
+    "players": players,
+    "games": games
 }
