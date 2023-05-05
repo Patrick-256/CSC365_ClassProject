@@ -18,19 +18,27 @@ You can:
 """
 tags_metadata = [
     {
-        "name": "characters",
+        "name": "users",
         "description": "Access information on characters in movies.",
     },
     {
-        "name": "movies",
+        "name": "friends",
         "description": "Access information on top-rated movies.",
     },
     {
-        "name": "lines",
+        "name": "fantasy_league",
         "description": "Access information on lines.",
     },
     {
-        "name": "conversations",
+        "name": "fantasy_team",
+        "description": "POST new conversations",
+    },
+    {
+        "name": "player",
+        "description": "POST new conversations",
+    },
+    {
+        "name": "game",
         "description": "POST new conversations",
     } 
 ]
@@ -45,10 +53,9 @@ app = FastAPI(
     },
     openapi_tags=tags_metadata,
 )
-app.include_router(characters.router)
-app.include_router(movies.router)
-app.include_router(lines.router)
-app.include_router(conversations.router)
+app.include_router(users.router)
+app.include_router(players.router)
+app.include_router(fantasy_teams.router)
 app.include_router(pkg_util.router)
 
 
