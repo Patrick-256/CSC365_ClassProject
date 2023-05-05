@@ -25,7 +25,7 @@ def add_player(name: str, irl_team_name: str, position: str):
 
     sql = """
           INSERT INTO players (player_id, player_name, player_position, irl_team_name)
-          VALUES ("""+new_id+", "+name+", "+position+", "+irl_team_name)"""
+          VALUES ("""+new_id+", "+name+", "+position+", "+irl_team_name+""")
     """
 
     conn.execute(sqlalchemy.text(sql))
