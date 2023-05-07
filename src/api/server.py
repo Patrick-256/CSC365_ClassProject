@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import pkg_util
+from src.api import pkg_util, users,players,fantasy_teams
 
 description = """
 Movie API returns dialog statistics on top hollywood movies from decades past.
