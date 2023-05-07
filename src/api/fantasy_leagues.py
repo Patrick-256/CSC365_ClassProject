@@ -14,11 +14,29 @@ def create_fantasy_league(user_id: int, name: str):
        specified name, adds user to league
        """
     
+    
 
 @router.get("/fantasy_leagues/{fantasy_league_id}", tags=["fantasy_leagues"])
-def get_fantasy_leagues(fantasy_league_id: int):
-        """lists teams in the specified league in order of points
-        """
+def get_fantasy_leagues(id: int):
+    """lists teams in the specified league in order of points
+    """
+    conn = db.engine.connect()
+
+    sql = """select 
+            fantasy_team_id,
+            ????POINTS???? as Points
+            from players
+            join games on players.player_id = games.player_id
+            join fantasy_leauges on fantasy_teams.fantasy_league_id = fantasy_leagues.fantasy_league_id
+            where fantasy_leagues.fantasy_league_id = """+id+""" 
+            order by Points desc
+    """
+    
+
+    conn.execute(sqlalchemy.text(sql))
+
+    return id
+
 
     
 
