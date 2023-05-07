@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from src.api import pkg_util, users,players,fantasy_teams
+from src.api import pkg_util, users,players,fantasy_teams,friends,fantasy_leagues,games
 
 description = """
 Movie API returns dialog statistics on top hollywood movies from decades past.
@@ -44,22 +44,25 @@ tags_metadata = [
 ]
 
 app = FastAPI(
-    title="Movie API",
+    title="Fantasy Soccer API",
     description=description,
     version="0.0.1",
     contact={
-        "name": "Patrick Whitlock",
-        "email": "pwhitloc@calpoly.edu",
+        "name": "Patrick Whitlock and Ashton Alonge",
+        "email": "pwhitloc@calpoly.edu and aalonge@calpoly.edu",
     },
     openapi_tags=tags_metadata,
 )
-app.include_router(users.router)
-app.include_router(players.router)
+app.include_router(fantasy_leagues.router)
 app.include_router(fantasy_teams.router)
+app.include_router(friends.router)
+app.include_router(games.router)
 app.include_router(pkg_util.router)
+app.include_router(players.router)
+app.include_router(users.router)
 
 
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Movie API. See /docs for more information."}
+    return {"message": "Welcome to the Fantasy Soccer API. See /docs for more information."}
