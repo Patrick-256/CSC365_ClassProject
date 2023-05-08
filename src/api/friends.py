@@ -12,3 +12,15 @@ router = APIRouter()
 def add_friend(user_id: int, friend_id: int):
     """adds a friend to the users friends
     """
+
+    conn = db.engine.connect()
+
+
+    sql = """
+          INSERT INTO friends (user_id, friend_id)
+          VALUES ("""+user_id+""", """+friend_id+""")
+    """
+
+    conn.execute(sqlalchemy.text(sql))
+
+    return (user_id, friend_id)
