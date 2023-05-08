@@ -18,12 +18,10 @@ class Friend:
 def add_friend(new_friend: Friend):
     """adds a friend to the users friends
     """
-    print(new_friend)
     #figure out friend id to assign
     lastFriendId_query = sqlalchemy.select(db.friends.c.friendship_id).order_by(sqlalchemy.desc(db.friends.c.friendship_id))
 
     new_user_id = None
-
     with db.engine.connect() as conn:
         lastUserId_result = conn.execute(lastFriendId_query)      
         lastUserId = lastUserId_result.fetchone()

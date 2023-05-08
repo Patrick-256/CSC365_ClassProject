@@ -75,6 +75,7 @@ def add_user_to_fantasy_league(id: int):
     print("id to join:",id)
     return {"nothering here yet!"}
 
+
 @router.get("/users/",tags=["users"])
 def list_users():
     """
