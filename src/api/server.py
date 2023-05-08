@@ -2,44 +2,39 @@ from fastapi import FastAPI
 from src.api import pkg_util, users,players,fantasy_teams,friends,fantasy_leagues,games
 
 description = """
-Movie API returns dialog statistics on top hollywood movies from decades past.
+Fantasy Soccer API allows users to simulate a fantasy soccer league.
 
-## Characters
-
-You can:
-* **list characters with sorting and filtering options.**
-* **retrieve a specific character by id**
-
-## Movies
+## users
 
 You can:
-* **list movies with sorting and filtering options.**
-* **retrieve a specific movie by id**
+* **Add a new user by providing the user_name and is_admin options.**
+* **list existing users**
+
 """
 tags_metadata = [
     {
         "name": "users",
-        "description": "Access information on characters in movies.",
+        "description": "Access information or add users.",
     },
     {
         "name": "friends",
-        "description": "Access information on top-rated movies.",
+        "description": "Access information or add new friendships",
     },
     {
-        "name": "fantasy_league",
-        "description": "Access information on lines.",
+        "name": "fantasy_leagues",
+        "description": "Access information or add new fantasy leagues.",
     },
     {
-        "name": "fantasy_team",
-        "description": "POST new conversations",
+        "name": "fantasy_teams",
+        "description": "Access information or add new fantasy teams.",
     },
     {
-        "name": "player",
-        "description": "POST new conversations",
+        "name": "players",
+        "description": "Access information, edit or add new players",
     },
     {
-        "name": "game",
-        "description": "POST new conversations",
+        "name": "games",
+        "description": "Access information or add new IRL games (to be used for calculating player stats).",
     } 
 ]
 
