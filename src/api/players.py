@@ -20,7 +20,7 @@ def add_player(name: str, irl_team_name: str, position: str):
 
     conn = db.engine.connect()
 
-    max_id = conn.execute(sqlalchemy.select(func.max(db.conversations.c.conversation_id))).scalar()
+    max_id = conn.execute(sqlalchemy.select(func.max(db.players.c.player_id))).scalar()
     new_id = (max_id or 0) + 1
 
     sql = """
