@@ -50,19 +50,24 @@ def add_player(name: str, irl_team_name: str, position: str):
     * `player_position`:
     """
 
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
-    max_id = conn.execute(sqlalchemy.select(func.max(db.players.c.player_id))).scalar()
-    new_id = (max_id or 0) + 1
 
-    sql = """
-          INSERT INTO players (player_id, player_name, player_position, irl_team_name)
-          VALUES ("""+new_id+", "+name+", "+position+", "+irl_team_name+""")
-    """
+      sql = """
+            INSERT INTO players (player_name, player_position, irl_team_name)
+            VALUES ((:name), (:position), (:irl_team_name))
+      """
 
-    conn.execute(sqlalchemy.text(sql))
+      params = {
+            'name':name,
+            'position': position,
+            'irl_team_name': irl_team_name
+      }
 
-    return new_id
+      conn.execute(sqlalchemy.text(sql),params)
+
+    return {"New player added."}
+
     
 @router.put("/players/{id}/info", tags=["players"])
 def edit_player(id: int, position: str, irl_team_name: str):
@@ -73,18 +78,24 @@ def edit_player(id: int, position: str, irl_team_name: str):
     * `player_position`:
     """
 
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
-    sql = """
-          update players
-          set irl_team_name = """+irl_team_name+"""
-          set player_position = """+irl_team_name+"""
-          where player_id = id
-    """
+      sql = """
+            update players
+            set irl_team_name = (:irl_team_name),
+                player_position = (:position)
+            where player_id = (:id)
+      """
 
-    conn.execute(sqlalchemy.text(sql))
+      params = {
+          'irl_team_name': irl_team_name,
+          'position': position,
+          'id': id
+      }
 
-    return id
+      conn.execute(sqlalchemy.text(sql),params)
+
+    return {"Edited player info."}
 
 
 @router.get("/players/{id}", tags=["players"])
@@ -99,24 +110,24 @@ def get_player(id: int):
     * game stats
     """
 
-    conn = db.engine.connect()
+    with db.engine.connect() as conn:
 
-    sql = """
-          select players.player_id, 
-          players.player_name, 
-          players.players.player_position,
-          players.irl_team_name,
-          games.num_goals,
-          games.num_assists,
-          games.num_passes,
-          games.num_shots_on_goal,
-          games.num_turnovers
-          from players
-          join games on games.player_id = players.player_id
-          where player_id = id
-    """
+      sql = """
+            select players.player_id, 
+            players.player_name, 
+            players.player_position,
+            players.irl_team_name,
+            games.num_goals,
+            games.num_assists,
+            games.num_passes,
+            games.num_shots_on_goal,
+            games.num_turnovers
+            from players
+            join games on games.player_id = players.player_id
+            where players.player_id = (:id)
+      """
 
-    result = conn.execute(sqlalchemy.text(sql)).fetchone()
+      result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
 
     return {
         "player_id": result.player_id,
@@ -133,39 +144,43 @@ def get_player(id: int):
 
 
 class player_sort_options(str, Enum):
-    goals = "games.num_goals"
-    assists = "games.num_assists"
-    shots = "games.num_shots"
-    shots_on_goal = "games.num_shots_on_goal"
-    games_played = "games.num_games_played"
+    goals = "num_goals"
+    assists = "num_assists"
+    shots = "num_shots"
+    shots_on_goal = "num_shots_on_goal"
+    games_played = "num_games_played"
 
 
-@router.get("/players/top?statistic={statistic}", tags=["players"])
+@router.get("/players/", tags=["players"])
 def get_players(sort: player_sort_options = player_sort_options.goals,
                 limit: int = Query(50, ge=1, le=250)):
     """
     """
 
-    conn = db.engine.connect()
+    with db.engine.connect() as conn:
 
-    sql = """
-          select players.player_id, 
-          players.player_name, 
-          players.players.player_position,
-          players.irl_team_name,
-          games.num_goals,
-          games.num_assists,
-          games.num_passes,
-          games.num_shots_on_goal,
-          games.num_turnovers
-          from players
-          join games on games.player_id = players.player_id
-          order by """+sort+""" desc
-          limit """+limit
-    
-    
+      sql = """
+            select players.player_id, 
+            players.player_name, 
+            players.player_position,
+            players.irl_team_name,
+            games.num_goals,
+            games.num_assists,
+            games.num_passes,
+            games.num_shots_on_goal,
+            games.num_turnovers
+            from players
+            join games on games.player_id = players.player_id
+            order by {} desc
+            limit (:limit)
+            """.format(sort.value)
+      
+      params = {
+          'limit': limit
+      }
+      
+      result = conn.execute(sqlalchemy.text(sql), params)
 
-    result = conn.execute(sqlalchemy.text(sql))
     players = []
 
     for row in result:

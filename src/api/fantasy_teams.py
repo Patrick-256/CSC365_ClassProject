@@ -112,25 +112,25 @@ def get_fantasy_team_score(fantasy_team_id: int):
     """return the score of the specified fantasy team,
        which is a sum of the team's player scores"""
     
-    conn = db.engine.connect()
+    with db.engine.connect() as conn:
         
-    sql = """
-            SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
-        FROM (
-        SELECT player_fantasy_team.player_id, SUM(num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2) AS player_score
-        FROM player_fantasy_team
-        JOIN games ON games.player_id = player_fantasy_team.player_id
-        WHERE player_fantasy_team.fantasy_team_id = (:fantasy_team_id)
-        GROUP BY player_fantasy_team.player_id
-        ) AS subquery
-        JOIN player_fantasy_team ON player_fantasy_team.player_id = subquery.player_id
-        GROUP BY player_fantasy_team.fantasy_team_id
-        """
+        sql = """
+                SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
+            FROM (
+            SELECT player_fantasy_team.player_id, SUM(num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2) AS player_score
+            FROM player_fantasy_team
+            JOIN games ON games.player_id = player_fantasy_team.player_id
+            WHERE player_fantasy_team.fantasy_team_id = (:fantasy_team_id)
+            GROUP BY player_fantasy_team.player_id
+            ) AS subquery
+            JOIN player_fantasy_team ON player_fantasy_team.player_id = subquery.player_id
+            GROUP BY player_fantasy_team.fantasy_team_id
+            """
 
-    result = conn.execute(sqlalchemy.text(sql),{'fantasy_team_id':fantasy_team_id}).fetchone()
+        result = conn.execute(sqlalchemy.text(sql),{'fantasy_team_id':fantasy_team_id}).fetchone()
 
     return {
-        "player_id": result.fantasy_team_id,
+        "team_id": fantasy_team_id,
         "Total_score": result.total_team_score
     }
     
