@@ -117,7 +117,7 @@ def get_fantasy_leagues(id: int):
 def get_top_fantasy_leagues():
     """lists fantasy leagues by score of the highest scoring team in the league"""
 
-    sql = """select fantasy_teams.fantasy_league_id, MAX(total_goals) AS highest_goal_count
+    sql = """select fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id, MAX(total_goals) AS highest_goal_count
             from fantasy_teams
             join player_fantasy_team on fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
             join (
@@ -125,17 +125,17 @@ def get_top_fantasy_leagues():
                 from games
                 group by fantasy_team_id
                 ) AS teamGoals ON player_fantasy_team.fantasy_team_id = teamGoals.fantasy_team_id
-            group by fantasy_teams.league_id
-    """
+            group by fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id
+            order by highest_goal_count"""
     
     with db.engine.connect() as conn:
         result = conn.execute(sqlalchemy.text(sql))
         res_json = []
         for row in result:
             res_json.append({
-                "fantasy_league_id":row.fantasy_league_id,
-                "fantasy_team_id":row.fantasy_team_id,
-                "total_goals":row.total_goals,
+                "fantasy_league_id": row.fantasy_league_id,
+                "fantasy_team_id": row.fantasy_team_id,
+                "total_goals": row.highest_goal_count,
             })
         return res_json
 
