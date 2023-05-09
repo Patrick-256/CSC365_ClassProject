@@ -15,8 +15,7 @@ class User:
     # user_id: int
     user_name: str
     is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
+    
     
 @pydantic.dataclasses.dataclass
 class Player:
@@ -97,12 +96,35 @@ def remove_player_from_fantasy_team(player_team: PlayerTeam):
     return {"Removed player from team"}
 
 
+
 @router.get("/fantasy_teams/{fantasy_team_id}/score", tags=["fantasy_teams"])
 def get_fantasy_team_score(fantasy_team_id: int):
     """return the score of the specified fantasy team,
        which is a sum of the team's player scores"""
     
+    conn = db.engine.connect()
+        
+    sql = """
+            SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
+        FROM (
+        SELECT player_fantasy_team.player_id, SUM(num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2) AS player_score
+        FROM player_fantasy_team
+        JOIN games ON games.player_id = player_fantasy_team.player_id
+        WHERE player_fantasy_team.fantasy_team_id = {}
+        GROUP BY player_fantasy_team.player_id
+        ) AS subquery
+        JOIN player_fantasy_team ON player_fantasy_team.player_id = subquery.player_id
+        GROUP BY player_fantasy_team.fantasy_team_id
+        """.format(fantasy_team_id)
+
+    result = conn.execute(sqlalchemy.text(sql)).fetchone()
+
+    return {
+        "player_id": result.fantasy_team_id,
+        "Total_score": result.total_team_score
+    }
     
+
 
 @router.put("/users/{fantasy_league_id}/join", tags=["users"])
 def add_team_to_fantasy_league(team: Fantasy_Team):
@@ -123,10 +145,3 @@ def add_team_to_fantasy_league(team: Fantasy_Team):
     conn.execute(sqlalchemy.text(sql))
 
     return ("Team addded to fantasy league")
-    
-
-    
-
-
-
-
