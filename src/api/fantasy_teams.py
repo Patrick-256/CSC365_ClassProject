@@ -49,16 +49,19 @@ def create_fantasy_team(team: Fantasy_Team):
     
     with db.engine.begin() as conn:
 
-        max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_teams.c.fantasy_team_id))).scalar()
-        new_id = (max_id or 0) + 1
 
         sql = """
-            INSERT INTO fantasy_teams (fantasy_team_id, fantasy_team_name, user_id)
-            VALUES ({},'{}',{})""".format(new_id, team.fantasy_team_name, team.user_id)
+            INSERT INTO fantasy_teams (fantasy_team_name, user_id)
+            VALUES ((:name),(:user_id))"""
+        
+        params = {
+                  'name': team.fantasy_team_name, 
+                  'user_id': team.user_id
+                  }
 
-        conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql),params)
 
-    return new_id
+    return {"New team added"}
     
 
 @router.post("/fantasy_teams/{fantasy_team_id}/players", tags=["fantasy_teams"])
@@ -71,9 +74,11 @@ def add_player_to_fantasy_team(player_team: PlayerTeam):
 
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
-            VALUES ({},{})""".format(player_team.player_id, player_team.fantasy_team_id)
+            VALUES ((:player_id),(:fantasy_team_id))"""
+        
+        params = {'player_id':player_team.player_id, 'fantasy_team_id':player_team.fantasy_team_id}
 
-        conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql),params)
 
     return {"Added player to team"}
 
@@ -88,10 +93,15 @@ def remove_player_from_fantasy_team(player_team: PlayerTeam):
 
         sql = """
             delete from player_fantasy_team
-            where player_id = {} and fantasy_team_id = {}
-            """.format(player_team.player_id, player_team.fantasy_team_id)
+            where player_id = (:player_id) and fantasy_team_id = (:fantasy_team_id)
+            """
+        
+        params = {
+                'player_id': player_team.player_id, 
+                'fantasy_team_id': player_team.fantasy_team_id
+                  }
 
-        conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql),params)
 
     return {"Removed player from team"}
 
@@ -110,14 +120,14 @@ def get_fantasy_team_score(fantasy_team_id: int):
         SELECT player_fantasy_team.player_id, SUM(num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2) AS player_score
         FROM player_fantasy_team
         JOIN games ON games.player_id = player_fantasy_team.player_id
-        WHERE player_fantasy_team.fantasy_team_id = {}
+        WHERE player_fantasy_team.fantasy_team_id = (:fantasy_team_id)
         GROUP BY player_fantasy_team.player_id
         ) AS subquery
         JOIN player_fantasy_team ON player_fantasy_team.player_id = subquery.player_id
         GROUP BY player_fantasy_team.fantasy_team_id
-        """.format(fantasy_team_id)
+        """
 
-    result = conn.execute(sqlalchemy.text(sql)).fetchone()
+    result = conn.execute(sqlalchemy.text(sql),{'fantasy_team_id':fantasy_team_id}).fetchone()
 
     return {
         "player_id": result.fantasy_team_id,
@@ -138,11 +148,13 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
         sql = """
             update fantasy_teams
-            set fantasy_league_id = {}
-            where fantasy_team_id = {}
-            """.format(league_id, team_id)
+            set fantasy_league_id = (:league_id)
+            where fantasy_team_id = (:team_id)
+            """
+        
+        params = {'league_id': league_id, 'team_id': team_id}
             
 
-        conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql),params)
 
     return ("Team addded to fantasy league")

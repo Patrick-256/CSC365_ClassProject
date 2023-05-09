@@ -43,7 +43,7 @@ class PlayerTeam:
 
 @pydantic.dataclasses.dataclass
 class Game:
-    game_id: int
+    #game_id: int
     player_id: int
     num_goals: int
     num_assists: int
@@ -71,22 +71,26 @@ def add_game(game: Game):
           game.num_turnovers = 0
     
     with db.engine.begin() as conn:
-        max_id = conn.execute(sqlalchemy.select(func.max(db.games.c.game_id))).scalar()
-        new_id = (max_id or 0) + 1
-
         sql = """
-            INSERT INTO games (game_id,
+            INSERT INTO games (
                                 player_id,
                                 num_goals,
                                 num_assists,
                                 num_passes,
                                 num_shots_on_goal,
                                 num_turnovers)
-            VALUES ({},{},{},{},{},{},{})
-        """.format(new_id, game.player_id, game.num_goals, game.num_assists, game.num_passes,
-                    game.num_shots_on_goal, game.num_turnovers)
+            VALUES (:player_id, :num_goals, :num_assists, :num_passes, :num_shots_on_goal, :num_turnovers)
+        """
+        params = {
+            'player_id': game.player_id,
+            'num_goals': game.num_goals,
+            'num_assists': game.num_assists,
+            'num_passes': game.num_passes,
+            'num_shots_on_goal': game.num_shots_on_goal,
+            'num_turnovers': game.num_turnovers
+        }
+        conn.execute(sqlalchemy.text(sql), params)
 
-        conn.execute(sqlalchemy.text(sql))
 
     return {"New game added!"}
         
@@ -97,36 +101,37 @@ def get_game_info(game_id: int):
     """returns information about the specified game
     """
 
-    conn = db.engine.connect()
+    with db.engine.connect() as conn:
    
-    sql = """
-          select game_id,
-                 games.player_id,
-                 players.player_name,
-                 num_goals,
-                 num_assists,
-                 num_passes,
-                 num_shots_on_goal,
-                 num_turnovers
-          from games
-          join players on games.player_id = players.player_id
-          where games.game_id = {}""".format(game_id)
+        sql = """
+            select game_id,
+                    games.player_id,
+                    players.player_name,
+                    num_goals,
+                    num_assists,
+                    num_passes,
+                    num_shots_on_goal,
+                    num_turnovers
+            from games
+            join players on games.player_id = players.player_id
+            where games.game_id = (:game_id)"""
 
-    result = conn.execute(sqlalchemy.text(sql))
-    player_stats = []
+        result = conn.execute(sqlalchemy.text(sql),
+                              {'game_id':game_id})
+        player_stats = []
 
-    for row in result:
-         ps = {
-                 "game_id": row.game_id,
-                 "games.player_id": row.player_id,
-                 "players.player_name": row.player_name,
-                 "num_goals": row.num_goals,
-                 "num_assists": row.num_assists,
-                 "num_passes": row.num_passes,
-                 "num_shots_on_goal": row.num_shots_on_goal,
-                 "num_turnovers": row.num_turnovers
-         }
-         player_stats.append(ps)
-    
-    
+        for row in result:
+            ps = {
+                    "game_id": row.game_id,
+                    "games.player_id": row.player_id,
+                    "players.player_name": row.player_name,
+                    "num_goals": row.num_goals,
+                    "num_assists": row.num_assists,
+                    "num_passes": row.num_passes,
+                    "num_shots_on_goal": row.num_shots_on_goal,
+                    "num_turnovers": row.num_turnovers
+            }
+            player_stats.append(ps)
+        
+        
     return player_stats
