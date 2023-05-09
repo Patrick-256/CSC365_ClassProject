@@ -54,7 +54,7 @@ def create_fantasy_league(new_fantasy_league_name: str):
 
     insert_statement = """
     INSERT INTO fantasy_leagues (fantasy_league_id, fantasy_league_name)
-    VALUES ((:new_id), '(:new_name)')
+    VALUES ((:new_id), (:new_name))
     """.format(new_id,new_fantasy_league_name)
 
     params = {'new_id':new_id,'new_name':new_fantasy_league_name,}
