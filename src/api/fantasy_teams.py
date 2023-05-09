@@ -11,12 +11,38 @@ import pydantic.dataclasses
 router = APIRouter()
 
 @pydantic.dataclasses.dataclass
+class User:
+    # user_id: int
+    user_name: str
+    is_admin: bool
+    # fantasy_team_id: int
+    # fantast_league_id: int
+    
+@pydantic.dataclasses.dataclass
+class Player:
+    player_id: int
+    player_name: str
+    player_position: str
+    irl_team_name: str
+
+@pydantic.dataclasses.dataclass
+class Fantasy_Team:
+    fantasy_team_id: int
+    fantasy_team_name: str
+    user_id: int
+
+@pydantic.dataclasses.dataclass
+class Friend:
+    user1_id: int
+    user2_id: int
+
+@pydantic.dataclasses.dataclass
 class PlayerTeam:
     player_id: int
     fantasy_team_id: int
 
 @router.post("/fantasy_teams/", tags=["fantasy_teams"])
-def create_fantasy_team(user_id: int, name: str):
+def create_fantasy_team(team: ):
     """Adds a new fantasy team with the
        specified user id
        """
@@ -28,8 +54,7 @@ def create_fantasy_team(user_id: int, name: str):
 
     sql = """
           INSERT INTO fantasy_teams (fantasy_team_id, fantasy_team_name, user_id)
-          VALUES ("""+new_id+", "+name+", "+user_id+""")
-    """
+          VALUES ("""+new_id+", "+name+", "+user_id+""")""".format()
 
     conn.execute(sqlalchemy.text(sql))
 
