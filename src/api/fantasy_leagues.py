@@ -53,7 +53,7 @@ def create_fantasy_league(new_fantasy_league_name: str):
     new_id = (max_id or 0) + 1
 
     insert_statement = """
-    INSERT INTO fantasy_leagues (user_id, fantasy_league_name)
+    INSERT INTO fantasy_leagues (fantasy_league_id, fantasy_league_name)
     VALUES ({}, '{}')
     """.format(new_id,new_fantasy_league_name)
 
@@ -63,7 +63,24 @@ def create_fantasy_league(new_fantasy_league_name: str):
         print(addUserResult)
     return {"Added fantasy league to the database!"}
     
+@router.get("/fantasy_leagues/", tags=["fantasy_leagues"])
+def list_fantasy_leagues():
+    """lists the fantasy leagues from the table
+    """
+
+    sql = """select * from fantasy_leagues"""
     
+    with db.engine.connect() as conn:
+        result = conn.execute(sqlalchemy.text(sql))
+        res_json = []
+        for row in result:
+            res_json.append({
+                "fantasy_league_id":row.fantasy_league_id,
+                "fantasy_league_name":row.fantasy_league_name,
+                "created_at":row.created_at,
+            })
+        return res_json
+
 
 @router.get("/fantasy_leagues/{fantasy_league_id}", tags=["fantasy_leagues"])
 def get_fantasy_leagues(id: int):
@@ -71,20 +88,25 @@ def get_fantasy_leagues(id: int):
     """
     conn = db.engine.connect()
 
-    sql = """select 
-            fantasy_team_id,
-            ????POINTS???? as Points
-            from players
-            join games on players.player_id = games.player_id
-            join fantasy_leauges on fantasy_teams.fantasy_league_id = fantasy_leagues.fantasy_league_id
-            where fantasy_leagues.fantasy_league_id = """+id+""" 
-            order by Points desc
+    sql = """select fantasy_team_id,
+            SUM(games.num_goals) as total_goals
+            from dantasy_teams
+            join player_fantasy_teams on fantasy_teams.fantasy_team_id = player_fantasy_teams.fantasy_team_id
+            join games on player_fantasy_teams.player_id = games.player_id
+            where fantasy_teams.fantasy_league_id = """+id+"""
+            group by fantasy_teams.team_id 
+            order by total_goals DESC
     """
     
-
-    conn.execute(sqlalchemy.text(sql))
-
-    return id
+    with db.engine.connect() as conn:
+        result = conn.execute(sqlalchemy.text(sql))
+        res_json = []
+        for row in result:
+            res_json.append({
+                "fantasy_team_id":row.fantasy_league_id,
+                "total_goals":row.fantasy_league_name,
+            })
+        return res_json
 
 
     
