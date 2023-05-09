@@ -5,6 +5,7 @@ from collections import Counter
 from fastapi.params import Query
 from src import database as db
 import sqlalchemy
+from sqlalchemy import func
 router = APIRouter()
 
 

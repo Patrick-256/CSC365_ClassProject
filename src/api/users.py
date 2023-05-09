@@ -77,14 +77,6 @@ def add_user(new_user: User):
     return {"Added user to the database!"}
 
 
-@router.post("/users/{fantasy_league_id}/join", tags=["users"])
-def add_user_to_fantasy_league(id: int):
-    """
-    This endpoint adds a user to a fantasy league
-    """
-    print("id to join:",id)
-    return {"nothering here yet!"}
-
 
 @router.get("/users/",tags=["users"])
 def list_users():
