@@ -5,29 +5,13 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 import pydantic.dataclasses
+from sqlalchemy import func
+from sqlalchemy import select
+import datetime
 
 
 router = APIRouter()
 
-
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
-    
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    fantasy_league_id: int
 
 
 @router.post("/users/", tags=["users"])
@@ -55,10 +39,14 @@ def add_user(new_user: User):
 
         new_user_id = lastUserId.user_id + 1
 
+        
+    now = datetime.datetime.now()
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
+
     insert_statement = """
-    INSERT INTO users (user_id, user_name, is_admin)
-    VALUES ({}, '{}', {})
-    """.format(new_user_id,new_user.user_name,new_user.is_admin)
+    INSERT INTO users (user_id, user_name, is_admin, created_at)
+    VALUES ({}, '{}', {}, '{}')
+    """.format(new_user_id,new_user.user_name,new_user.is_admin,now_str)
 
     with db.engine.begin() as conn:
         addUserResult = conn.execute(sqlalchemy.text(insert_statement))
