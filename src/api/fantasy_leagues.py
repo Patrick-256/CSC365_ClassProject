@@ -54,11 +54,13 @@ def create_fantasy_league(new_fantasy_league_name: str):
 
     insert_statement = """
     INSERT INTO fantasy_leagues (fantasy_league_id, fantasy_league_name)
-    VALUES ({}, '{}')
+    VALUES ((:new_id), (:new_name))
     """.format(new_id,new_fantasy_league_name)
 
+    params = {'new_id':new_id,'new_name':new_fantasy_league_name,}
+
     with db.engine.begin() as conn:
-        addUserResult = conn.execute(sqlalchemy.text(insert_statement))
+        addUserResult = conn.execute(sqlalchemy.text(insert_statement),params)
 
         print(addUserResult)
     return {"Added fantasy league to the database!"}
@@ -92,13 +94,14 @@ def get_fantasy_leagues(id: int):
             from fantasy_teams
             join player_fantasy_team on fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
             join games on player_fantasy_team.player_id = games.player_id
-            where fantasy_teams.fantasy_league_id = {}
+            where fantasy_teams.fantasy_league_id = (:id)
             group by fantasy_teams.fantasy_team_id 
             order by total_goals DESC
-    """.format(id)
+    """
+    params = {'id':id}
     
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql))
+        result = conn.execute(sqlalchemy.text(sql),params)
         res_json = []
         for row in result:
             res_json.append({

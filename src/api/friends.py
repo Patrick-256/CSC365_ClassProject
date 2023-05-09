@@ -54,11 +54,13 @@ def add_friend(new_friend: Friend):
 
     insert_statement = """
     INSERT INTO friends (user1_id, user2_id)
-    VALUES ({}, {})
-    """.format(new_friend.user1_id,new_friend.user2_id)
+    VALUES ((:user1_id), (:user2_id))
+    """
+
+    params = {'user1_id':new_friend.user1_id,'user2_id':new_friend.user2_id}
 
     with db.engine.begin() as conn:
-        conn.execute(sqlalchemy.text(insert_statement))
+        conn.execute(sqlalchemy.text(insert_statement),params)
 
     return {"Added friendship to the database!"}
 
