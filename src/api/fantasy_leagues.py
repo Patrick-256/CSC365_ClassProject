@@ -43,10 +43,25 @@ class PlayerTeam:
 
 
 @router.post("/fantasy_leagues/", tags=["fantasy_leagues"])
-def create_fantasy_league(user_id: int, name: str):
+def create_fantasy_league(new_fantasy_league_name: str):
     """Adds a new fantasy league with the
        specified name, adds user to league
        """
+    # Figure out what id to assign this new fantasy league
+    conn = db.engine.connect()
+    max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_leagues.c.fantasy_league_id))).scalar()
+    new_id = (max_id or 0) + 1
+
+    insert_statement = """
+    INSERT INTO fantasy_leagues (user_id, fantasy_league_name)
+    VALUES ({}, '{}')
+    """.format(new_id,new_fantasy_league_name)
+
+    with db.engine.begin() as conn:
+        addUserResult = conn.execute(sqlalchemy.text(insert_statement))
+
+        print(addUserResult)
+    return {"Added fantasy league to the database!"}
     
     
 
