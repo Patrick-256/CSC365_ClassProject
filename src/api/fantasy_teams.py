@@ -30,6 +30,7 @@ class Fantasy_Team:
     fantasy_team_id: int
     fantasy_team_name: str
     user_id: int
+    fantasy_league_id: int 
 
 @pydantic.dataclasses.dataclass
 class Friend:
@@ -42,7 +43,7 @@ class PlayerTeam:
     fantasy_team_id: int
 
 @router.post("/fantasy_teams/", tags=["fantasy_teams"])
-def create_fantasy_team(team: ):
+def create_fantasy_team(team: Fantasy_Team):
     """Adds a new fantasy team with the
        specified user id
        """
@@ -54,7 +55,7 @@ def create_fantasy_team(team: ):
 
     sql = """
           INSERT INTO fantasy_teams (fantasy_team_id, fantasy_team_name, user_id)
-          VALUES ("""+new_id+", "+name+", "+user_id+""")""".format()
+          VALUES ({},{},{})""".format(new_id, team.fantasy_team_name, team.user_id)
 
     conn.execute(sqlalchemy.text(sql))
 
@@ -79,9 +80,21 @@ def add_player_to_fantasy_team(player_team: PlayerTeam):
 
 
 @router.delete("/fantasy_teams/{fantasy_team_id}/players", tags=["fantasy_teams"])
-def remove_player_from_fantasy_team(player_id: int, fantasy_team_id: str):
+def remove_player_from_fantasy_team(player_team: PlayerTeam):
     """removes a player from the specified fantasy team
     """
+
+    conn = db.engine.connect()
+
+
+    sql = """
+          delete from player_fantasy_team
+          where player_id = {} and fantasy_team_id = {}
+          """.format(player_team.player_id, player_team.fantasy_team_id)
+
+    conn.execute(sqlalchemy.text(sql))
+
+    return {"Removed player from team"}
 
 
 @router.get("/fantasy_teams/{fantasy_team_id}/score", tags=["fantasy_teams"])
@@ -89,9 +102,10 @@ def get_fantasy_team_score(fantasy_team_id: int):
     """return the score of the specified fantasy team,
        which is a sum of the team's player scores"""
     
+    
 
 @router.put("/users/{fantasy_league_id}/join", tags=["users"])
-def add_team_to_fantasy_league(team_id: int, league_id: int):
+def add_team_to_fantasy_league(team: Fantasy_Team):
     """
     This endpoint adds a user to a fantasy league
     It sets the league_id column of a team
@@ -101,13 +115,14 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
     sql = """
           update fantasy_teams
-          set fantasy_league_id = """+league_id+"""
-          where team_id = """+team_id
+          set fantasy_league_id = {}
+          where team_id = {}
+          """.format(team.fantasy_league_id, team.fantasy_team_id)
         
 
     conn.execute(sqlalchemy.text(sql))
 
-    return (team_id, league_id)
+    return ("Team addded to fantasy league")
     
 
     

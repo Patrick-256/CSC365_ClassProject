@@ -41,24 +41,34 @@ class PlayerTeam:
     player_id: int
     fantasy_team_id: int
 
+@pydantic.dataclasses.dataclass
+class Game:
+    game_id: int
+    player_id: int
+    num_goals: int
+    num_assists: int
+    num_passes: int
+    num_shots_on_goal: int
+    num_turnovers: int 
+
+
 
 @router.post("/games/", tags=["games"])
-def add_game(player_id: int, num_goals: int, num_assists: int,
-             num_passes: int, num_shots_on_goal: int, num_turnovers: int):
+def add_game(game: Game):
     """"""
 
     #if player_id not in players edge case check
 
-    if num_goals < 0 or num_goals is None:
-          num_goals = 0
-    if num_assists < 0 or num_goals is None:
-          num_goals = 0
-    if num_passes < 0 or num_goals is None:
-          num_goals = 0
-    if num_shots_on_goal < 0 or num_goals is None:
-          num_goals = 0
-    if num_turnovers < 0 or num_goals is None:
-          num_goals = 0
+    if game.num_goals < 0 or game.num_goals is None:
+          game.num_goals = 0
+    if game.num_assists < 0 or game.num_assists is None:
+          game.num_assists = 0
+    if game.num_passes < 0 or game.num_passes is None:
+          game.num_passes = 0
+    if game.num_shots_on_goal < 0 or game.num_shots_on_goal is None:
+          game.num_shots_on_goal = 0
+    if game.num_turnovers < 0 or game.num_turnovers is None:
+          game.num_turnovers = 0
     
     conn = db.engine.connect()
 
@@ -73,13 +83,13 @@ def add_game(player_id: int, num_goals: int, num_assists: int,
                              num_passes,
                              num_shots_on_goal,
                              num_turnovers)
-          VALUES ("""+new_id+""", """+player_id+""", """+num_goals+""", """+num_assists+""", 
-                """+num_passes+""", """+num_shots_on_goal+""", """+num_turnovers+""")
-    """
+          VALUES ({},{},{},{},{},{},{})
+    """.format(new_id, game.player_id, game.num_goals, game.num_assists, game.num_passes,
+                game.num_shots_on_goal, game.num_turnovers)
 
     conn.execute(sqlalchemy.text(sql))
 
-    return new_id
+    return {"New game added!"}
         
 
 
@@ -89,7 +99,6 @@ def get_game_info(game_id: int):
     """
 
     conn = db.engine.connect()
-
    
     sql = """
           select game_id,
