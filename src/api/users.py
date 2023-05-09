@@ -7,7 +7,6 @@ import sqlalchemy
 import pydantic.dataclasses
 from sqlalchemy import func
 from sqlalchemy import select
-import datetime
 
 
 router = APIRouter()
@@ -56,29 +55,20 @@ def add_user(new_user: User):
     new_user_id = None
 
     with db.engine.connect() as conn:
-        lastUserId_result = conn.execute(lastUserId_query)
-        
+        lastUserId_result = conn.execute(lastUserId_query)     
         lastUserId = lastUserId_result.fetchone()
-
-        print("last user_id is:")
-        print(lastUserId.user_id)
-        print(lastUserId.user_name)
-        print(lastUserId.is_admin)
-        print(lastUserId.created_at)
-
         new_user_id = lastUserId.user_id + 1
 
-        
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
     insert_statement = """
-    INSERT INTO users (user_id, user_name, is_admin, created_at)
-    VALUES ({}, '{}', {}, '{}')
-    """.format(new_user_id,new_user.user_name,new_user.is_admin,now_str)
+    INSERT INTO users (user_id, user_name, is_admin)
+    VALUES ((:new_user_id), (:user_name), (:is_admin))
+    """
+
+    params = {'new_user_id':new_user_id,'user_name':new_user.user_name,'is_admin':new_user.is_admin}
 
     with db.engine.begin() as conn:
-        addUserResult = conn.execute(sqlalchemy.text(insert_statement))
+        addUserResult = conn.execute(sqlalchemy.text(insert_statement),params)
 
         print(addUserResult)
     return {"Added user to the database!"}
