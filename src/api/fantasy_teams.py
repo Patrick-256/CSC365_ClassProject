@@ -47,16 +47,16 @@ def create_fantasy_team(team: Fantasy_Team):
        specified user id
        """
     
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
-    max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_teams.c.fantasy_team_id))).scalar()
-    new_id = (max_id or 0) + 1
+        max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_teams.c.fantasy_team_id))).scalar()
+        new_id = (max_id or 0) + 1
 
-    sql = """
-          INSERT INTO fantasy_teams (fantasy_team_id, fantasy_team_name, user_id)
-          VALUES ({},{},{})""".format(new_id, team.fantasy_team_name, team.user_id)
+        sql = """
+            INSERT INTO fantasy_teams (fantasy_team_id, fantasy_team_name, user_id)
+            VALUES ({},'{}',{})""".format(new_id, team.fantasy_team_name, team.user_id)
 
-    conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql))
 
     return new_id
     
@@ -66,14 +66,14 @@ def add_player_to_fantasy_team(player_team: PlayerTeam):
     """adds a player to the specified fantasy team
     """
 
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
 
-    sql = """
-          INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
-          VALUES ({},{})""".format(player_team.player_id, player_team.fantasy_team_id)
+        sql = """
+            INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
+            VALUES ({},{})""".format(player_team.player_id, player_team.fantasy_team_id)
 
-    conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql))
 
     return {"Added player to team"}
 
@@ -83,15 +83,15 @@ def remove_player_from_fantasy_team(player_team: PlayerTeam):
     """removes a player from the specified fantasy team
     """
 
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
 
-    sql = """
-          delete from player_fantasy_team
-          where player_id = {} and fantasy_team_id = {}
-          """.format(player_team.player_id, player_team.fantasy_team_id)
+        sql = """
+            delete from player_fantasy_team
+            where player_id = {} and fantasy_team_id = {}
+            """.format(player_team.player_id, player_team.fantasy_team_id)
 
-    conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql))
 
     return {"Removed player from team"}
 
@@ -126,22 +126,23 @@ def get_fantasy_team_score(fantasy_team_id: int):
     
 
 
-@router.put("/users/{fantasy_league_id}/join", tags=["users"])
-def add_team_to_fantasy_league(team: Fantasy_Team):
+@router.put("/fantasy_teams/{fantasy_league_id}/join", tags=["fantasy_teams"])
+def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
     This endpoint adds a user to a fantasy league
     It sets the league_id column of a team
     """
 
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
 
-    sql = """
-          update fantasy_teams
-          set fantasy_league_id = {}
-          where team_id = {}
-          """.format(team.fantasy_league_id, team.fantasy_team_id)
-        
 
-    conn.execute(sqlalchemy.text(sql))
+        sql = """
+            update fantasy_teams
+            set fantasy_league_id = {}
+            where fantasy_team_id = {}
+            """.format(league_id, team_id)
+            
+
+        conn.execute(sqlalchemy.text(sql))
 
     return ("Team addded to fantasy league")

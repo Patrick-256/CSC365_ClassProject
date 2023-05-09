@@ -70,24 +70,23 @@ def add_game(game: Game):
     if game.num_turnovers < 0 or game.num_turnovers is None:
           game.num_turnovers = 0
     
-    conn = db.engine.connect()
+    with db.engine.begin() as conn:
+        max_id = conn.execute(sqlalchemy.select(func.max(db.games.c.game_id))).scalar()
+        new_id = (max_id or 0) + 1
 
-    max_id = conn.execute(sqlalchemy.select(func.max(db.games.c.game_id))).scalar()
-    new_id = (max_id or 0) + 1
+        sql = """
+            INSERT INTO games (game_id,
+                                player_id,
+                                num_goals,
+                                num_assists,
+                                num_passes,
+                                num_shots_on_goal,
+                                num_turnovers)
+            VALUES ({},{},{},{},{},{},{})
+        """.format(new_id, game.player_id, game.num_goals, game.num_assists, game.num_passes,
+                    game.num_shots_on_goal, game.num_turnovers)
 
-    sql = """
-          INSERT INTO games (game_id,
-                             player_id,
-                             num_goals,
-                             num_assists,
-                             num_passes,
-                             num_shots_on_goal,
-                             num_turnovers)
-          VALUES ({},{},{},{},{},{},{})
-    """.format(new_id, game.player_id, game.num_goals, game.num_assists, game.num_passes,
-                game.num_shots_on_goal, game.num_turnovers)
-
-    conn.execute(sqlalchemy.text(sql))
+        conn.execute(sqlalchemy.text(sql))
 
     return {"New game added!"}
         
@@ -103,15 +102,15 @@ def get_game_info(game_id: int):
     sql = """
           select game_id,
                  games.player_id,
-                 players.name,
+                 players.player_name,
                  num_goals,
                  num_assists,
                  num_passes,
                  num_shots_on_goal,
                  num_turnovers
           from games
-          join players where games.player_id = players.player_id
-          where games.game_id = """+game_id
+          join players on games.player_id = players.player_id
+          where games.game_id = {}""".format(game_id)
 
     result = conn.execute(sqlalchemy.text(sql))
     player_stats = []
@@ -120,7 +119,7 @@ def get_game_info(game_id: int):
          ps = {
                  "game_id": row.game_id,
                  "games.player_id": row.player_id,
-                 "players.name": row.name,
+                 "players.player_name": row.player_name,
                  "num_goals": row.num_goals,
                  "num_assists": row.num_assists,
                  "num_passes": row.num_passes,
