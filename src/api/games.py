@@ -43,7 +43,7 @@ class PlayerTeam:
 
 @pydantic.dataclasses.dataclass
 class Game:
-    #game_id: int
+    game_id: int
     player_id: int
     num_goals: int
     num_assists: int
@@ -73,15 +73,17 @@ def add_game(game: Game):
     with db.engine.begin() as conn:
         sql = """
             INSERT INTO games (
+                                game_id,
                                 player_id,
                                 num_goals,
                                 num_assists,
                                 num_passes,
                                 num_shots_on_goal,
                                 num_turnovers)
-            VALUES (:player_id, :num_goals, :num_assists, :num_passes, :num_shots_on_goal, :num_turnovers)
+            VALUES (:game_id, :player_id, :num_goals, :num_assists, :num_passes, :num_shots_on_goal, :num_turnovers)
         """
         params = {
+            'game_id': game.game_id,
             'player_id': game.player_id,
             'num_goals': game.num_goals,
             'num_assists': game.num_assists,
