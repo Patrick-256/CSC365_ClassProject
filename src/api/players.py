@@ -113,18 +113,27 @@ def get_player(id: int):
     with db.engine.connect() as conn:
 
       sql = """
-            select players.player_id, 
+              SELECT
+            players.player_id, 
             players.player_name, 
             players.player_position,
             players.irl_team_name,
-            games.num_goals,
-            games.num_assists,
-            games.num_passes,
-            games.num_shots_on_goal,
-            games.num_turnovers
-            from players
-            join games on games.player_id = players.player_id
-            where players.player_id = (:id)
+            SUM(games.num_goals) AS total_num_goals,
+            SUM(games.num_assists) AS total_num_assists,
+            SUM(games.num_passes) AS total_num_passes,
+            SUM(games.num_shots_on_goal) AS total_num_shots_on_goal,
+            SUM(games.num_turnovers) AS total_num_turnovers
+            FROM
+                players
+            JOIN games ON games.player_id = players.player_id
+            WHERE
+                players.player_id = :id
+            GROUP BY
+                players.player_id, 
+                players.player_name, 
+                players.player_position,
+                players.irl_team_name;
+
       """
 
       result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
@@ -134,11 +143,11 @@ def get_player(id: int):
         "player_name": result.player_name,
         "player_position": result.player_position,
         "irl_team_name": result.irl_team_name,
-        "num_goals": result.num_goals,
-        "num_assists": result.num_assists,
-        "num_passes": result.num_passes,
-        "num_shots_on_goal": result.num_shots_on_goal,
-        "num_turnovers": result.num_turnovers   
+        "total_num_goals": result.total_num_goals,
+        "total_num_assists": result.total_num_assists,
+        "total_num_passes": result.total_num_passes,
+        "total_num_shots_on_goal": result.total_num_shots_on_goal,
+        "total_num_turnovers": result.total_num_turnovers   
     }
         
 
@@ -160,18 +169,25 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
     with db.engine.connect() as conn:
 
       sql = """
-            select players.player_id, 
+              SELECT
+            players.player_id, 
             players.player_name, 
             players.player_position,
             players.irl_team_name,
-            games.num_goals,
-            games.num_assists,
-            games.num_passes,
-            games.num_shots_on_goal,
-            games.num_turnovers
-            from players
-            join games on games.player_id = players.player_id
-            order by {} desc
+            SUM(games.num_goals) AS num_goals,
+            SUM(games.num_assists) AS num_assists,
+            SUM(games.num_passes) AS num_passes,
+            SUM(games.num_shots_on_goal) AS num_shots_on_goal,
+            SUM(games.num_turnovers) AS num_turnovers
+            FROM
+                players
+            JOIN games ON games.player_id = players.player_id
+            GROUP BY
+                players.player_id, 
+                players.player_name, 
+                players.player_position,
+                players.irl_team_name
+            ORDER BY {} desc
             limit (:limit)
             """.format(sort.value)
       
@@ -189,12 +205,12 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
         "player_name": row.player_name,
         "player_position": row.player_position,
         "irl_team_name": row.irl_team_name,
-        "num_goals": row.num_goals,
-        "num_assists": row.num_assists,
-        "num_passes": row.num_passes,
-        "num_shots_on_goal": row.num_shots_on_goal,
-        "num_turnovers": row.num_turnovers   
-      }
+        "total_num_goals": row.num_goals,
+        "total_num_assists": row.num_assists,
+        "total_num_passes": row.num_passes,
+        "total_num_shots_on_goal": row.num_shots_on_goal,
+        "total_num_turnovers": row.num_turnovers   
+    }
       players.append(player)
 
     return players
