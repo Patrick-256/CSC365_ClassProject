@@ -1,0 +1,12 @@
+[
+    {
+        "game_id": 0,
+        "games.player_id": 0,
+        "players.player_name": "Patrick",
+        "num_goals": 2,
+        "num_assists": 1,
+        "num_passes": 10,
+        "num_shots_on_goal": 3,
+        "num_turnovers": 2
+    }
+]
