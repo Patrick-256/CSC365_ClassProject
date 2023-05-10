@@ -82,6 +82,7 @@ def add_game(game: Game):
                                 num_turnovers)
             VALUES (:game_id, :player_id, :num_goals, :num_assists, :num_passes, :num_shots_on_goal, :num_turnovers)
         """
+        
         params = {
             'game_id': game.game_id,
             'player_id': game.player_id,
