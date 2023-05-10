@@ -47,24 +47,21 @@ def create_fantasy_league(new_fantasy_league_name: str):
     """Adds a new fantasy league with the
        specified name, adds user to league
        """
-    # Figure out what id to assign this new fantasy league
-    conn = db.engine.connect()
-    max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_leagues.c.fantasy_league_id))).scalar()
-    new_id = (max_id or 0) + 1
 
     insert_statement = """
-    INSERT INTO fantasy_leagues (fantasy_league_id, fantasy_league_name)
-    VALUES ((:new_id), (:new_name))
-    """.format(new_id,new_fantasy_league_name)
+    INSERT INTO fantasy_leagues (fantasy_league_name)
+    VALUES ((:new_name))
+    """
 
-    params = {'new_id':new_id,'new_name':new_fantasy_league_name,}
+    params = {'new_name':new_fantasy_league_name}
 
     with db.engine.begin() as conn:
-        addUserResult = conn.execute(sqlalchemy.text(insert_statement),params)
+        conn.execute(sqlalchemy.text(insert_statement),params)
 
-        print(addUserResult)
     return {"Added fantasy league to the database!"}
-    
+
+
+
 @router.get("/fantasy_leagues/", tags=["fantasy_leagues"])
 def list_fantasy_leagues():
     """lists the fantasy leagues from the table
@@ -85,28 +82,31 @@ def list_fantasy_leagues():
 
 
 @router.get("/fantasy_leagues/{fantasy_league_id}", tags=["fantasy_leagues"])
-def get_fantasy_leagues(id: int):
-    """lists teams in the specified league in order of points
+def get_top_teams_in_fantasy_league(id: int):
     """
+    Lists teams in the specified league in order of total points.
+    Total points is calculated based on the following formula:
+    total_points = num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2
+    """
+    sql = """SELECT 
+                fantasy_teams.fantasy_team_id,
+                SUM(games.num_goals * 5 + games.num_assists * 3 + games.num_passes * 0.05 + games.num_shots_on_goal * 0.2 - games.num_turnovers * 0.2) AS total_points
+            FROM fantasy_teams
+            JOIN player_fantasy_team ON fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
+            JOIN games ON player_fantasy_team.player_id = games.player_id
+            WHERE fantasy_teams.fantasy_league_id = :id
+            GROUP BY fantasy_teams.fantasy_team_id
+            ORDER BY total_points DESC
+            """
+    params = {'id': id}
 
-    sql = """select fantasy_teams.fantasy_team_id,
-            SUM(games.num_goals) as total_goals
-            from fantasy_teams
-            join player_fantasy_team on fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
-            join games on player_fantasy_team.player_id = games.player_id
-            where fantasy_teams.fantasy_league_id = (:id)
-            group by fantasy_teams.fantasy_team_id 
-            order by total_goals DESC
-    """
-    params = {'id':id}
-    
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql),params)
+        result = conn.execute(sqlalchemy.text(sql), params)
         res_json = []
         for row in result:
             res_json.append({
-                "fantasy_team_id":row.fantasy_team_id,
-                "total_goals":row.total_goals,
+                "fantasy_team_id": row.fantasy_team_id,
+                "total_points": row.total_points,
             })
         return res_json
 
@@ -117,16 +117,14 @@ def get_fantasy_leagues(id: int):
 def get_top_fantasy_leagues():
     """lists fantasy leagues by score of the highest scoring team in the league"""
 
-    sql = """select fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id, MAX(total_goals) AS highest_goal_count
-            from fantasy_teams
-            join player_fantasy_team on fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
-            join (
-                select fantasy_team_id, SUM(games.num_goals) AS total_goals
-                from games
-                group by fantasy_team_id
-                ) AS teamGoals ON player_fantasy_team.fantasy_team_id = teamGoals.fantasy_team_id
-            group by fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id
-            order by highest_goal_count"""
+    sql = """SELECT fantasy_teams.fantasy_league_id, 
+                    fantasy_teams.fantasy_team_id, 
+                    SUM(games.num_goals*5 + games.num_assists*3 + games.num_passes*0.05 + games.num_shots_on_goal*0.2 - games.num_turnovers*0.2) AS total_points
+            FROM fantasy_teams
+            JOIN player_fantasy_team ON fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
+            JOIN games ON player_fantasy_team.player_id = games.player_id
+            GROUP BY fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id
+            ORDER BY total_points DESC"""
     
     with db.engine.connect() as conn:
         result = conn.execute(sqlalchemy.text(sql))
@@ -135,7 +133,7 @@ def get_top_fantasy_leagues():
             res_json.append({
                 "fantasy_league_id": row.fantasy_league_id,
                 "fantasy_team_id": row.fantasy_team_id,
-                "total_goals": row.highest_goal_count,
+                "total_points": row.total_points,
             })
         return res_json
 
