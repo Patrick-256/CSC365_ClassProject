@@ -16,3 +16,11 @@ def test_get_user():
     "is_admin": True,
     "created_at": "2023-05-07T17:30:11+00:00"
   }
+    
+def test_add_user():
+    test_user = {
+        "user_name": "unitTest01",
+        "is_admin": False
+    }
+    response = client.post("/users/", json=test_user)
+    assert response.status_code == 200

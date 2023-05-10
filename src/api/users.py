@@ -47,25 +47,12 @@ def add_user(new_user: User):
     """
     This endpoint adds a user to the database
     """
-    print(new_user)
-
-    #figure out user id to assign
-    lastUserId_query = sqlalchemy.select(db.users.c.user_id,db.users.c.user_name,db.users.c.is_admin,db.users.c.created_at).order_by(sqlalchemy.desc(db.users.c.user_id))
-
-    new_user_id = None
-
-    with db.engine.connect() as conn:
-        lastUserId_result = conn.execute(lastUserId_query)     
-        lastUserId = lastUserId_result.fetchone()
-        new_user_id = lastUserId.user_id + 1
-
 
     insert_statement = """
-    INSERT INTO users (user_id, user_name, is_admin)
-    VALUES ((:new_user_id), (:user_name), (:is_admin))
+    INSERT INTO users (user_name, is_admin)
+    VALUES ((:user_name), (:is_admin))
     """
-
-    params = {'new_user_id':new_user_id,'user_name':new_user.user_name,'is_admin':new_user.is_admin}
+    params = {'user_name':new_user.user_name,'is_admin':new_user.is_admin}
 
     with db.engine.begin() as conn:
         addUserResult = conn.execute(sqlalchemy.text(insert_statement),params)
