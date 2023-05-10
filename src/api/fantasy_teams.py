@@ -64,7 +64,7 @@ def create_fantasy_team(team: Fantasy_Team):
     return {"New team added"}
     
 
-@router.post("/fantasy_teams/{fantasy_team_id}/players", tags=["fantasy_teams"])
+@router.post("/fantasy_teams/players", tags=["fantasy_teams"])
 def add_player_to_fantasy_team(player_team: PlayerTeam):
     """adds a player to the specified fantasy team
     """
