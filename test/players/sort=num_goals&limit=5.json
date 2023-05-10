@@ -1,0 +1,35 @@
+[
+    {
+        "player_id": 2,
+        "player_name": "Lucas",
+        "player_position": "RB",
+        "irl_team_name": "Seattle Sounders",
+        "total_num_goals": 5,
+        "total_num_assists": 4,
+        "total_num_passes": 43,
+        "total_num_shots_on_goal": 8,
+        "total_num_turnovers": 1
+    },
+    {
+        "player_id": 0,
+        "player_name": "Patrick",
+        "player_position": "LW",
+        "irl_team_name": "Barcelona",
+        "total_num_goals": 2,
+        "total_num_assists": 1,
+        "total_num_passes": 10,
+        "total_num_shots_on_goal": 3,
+        "total_num_turnovers": 2
+    },
+    {
+        "player_id": 1,
+        "player_name": "Ashton",
+        "player_position": "ST",
+        "irl_team_name": "Manchester City",
+        "total_num_goals": 1,
+        "total_num_assists": 2,
+        "total_num_passes": 5,
+        "total_num_shots_on_goal": 2,
+        "total_num_turnovers": 5
+    }
+]
