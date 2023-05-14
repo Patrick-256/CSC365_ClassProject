@@ -47,7 +47,8 @@ class Friend:
 
 @router.post("/friends/", tags=["users"])
 def add_friend(new_friend: Friend):
-    """adds a friend to the users friends
+    """
+    adds a friendship between two user ids
     """
     #Should probably check the user_id's to make sure they exist and they
     #are not already friends before adding the friendship between them

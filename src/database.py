@@ -20,10 +20,6 @@ engine = sqlalchemy.create_engine(database_connection_url())
 # Create a single connection to the database. Later we will discuss pooling connections.
 conn = engine.connect()
 
-from sqlalchemy import MetaData, Table, Column, Integer, String, Float
-
-# metadata = MetaData()
-
 metadata_obj = sqlalchemy.MetaData()
 users = sqlalchemy.Table("users", metadata_obj, autoload_with=engine)
 fantasy_leagues = sqlalchemy.Table("fantasy_leagues", metadata_obj, autoload_with=engine)

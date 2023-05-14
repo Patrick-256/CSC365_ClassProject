@@ -44,9 +44,10 @@ class PlayerTeam:
 
 @router.post("/fantasy_leagues/", tags=["fantasy_leagues"])
 def create_fantasy_league(new_fantasy_league_name: str):
-    """Adds a new fantasy league with the
-       specified name, adds user to league
-       """
+    """
+    Adds a new fantasy league with the
+    specified name, adds user to league
+    """
 
     insert_statement = """
     INSERT INTO fantasy_leagues (fantasy_league_name)
@@ -64,7 +65,8 @@ def create_fantasy_league(new_fantasy_league_name: str):
 
 @router.get("/fantasy_leagues/", tags=["fantasy_leagues"])
 def list_fantasy_leagues():
-    """lists the fantasy leagues from the table
+    """
+    lists the fantasy leagues from the table
     """
 
     sql = """select * from fantasy_leagues"""
@@ -115,7 +117,9 @@ def get_top_teams_in_fantasy_league(id: int):
 #this one doesnt work yet
 @router.get("/fantasy_leagues/leaderboard", tags=["fantasy_leagues"])
 def get_top_fantasy_leagues():
-    """lists fantasy leagues by score of the highest scoring team in the league"""
+    """
+    lists fantasy leagues by score of the highest scoring team in the league.
+    """
 
     sql = """SELECT fantasy_teams.fantasy_league_id, 
                     fantasy_teams.fantasy_team_id, 
