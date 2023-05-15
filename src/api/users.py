@@ -33,18 +33,33 @@ def add_user(new_user: datatypes.User):
 
 
 @router.get("/users/",tags=["users"])
-def list_users():
+def list_users(
+    user_name: str = "",
+    limit: int = Query(50, ge=1, le=250),
+    offset: int = Query(0, ge=0),
+):
     """
-    At the moment, this endpoint just lists to first 10 users in the table
+    Lists users from the database
+    `user_name` - show users whose user_name matches the given string
+    `limit`  - how many users to show
+    `offset` - how many users to skip over
     """
 
     users_query = """
     SELECT *
     FROM users
-    LIMIT 10
+    WHERE user_name LIKE '%(:user_name)%'
+    OFFSET (:offset)
+    LIMIT (:limit)
     """
+    params = {
+          'user_name': user_name,
+          'limit': limit,
+          'offset': offset
+        }
+    
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(users_query))
+        result = conn.execute(sqlalchemy.text(users_query),params)
         res_json = []
         for row in result:
             res_json.append({
