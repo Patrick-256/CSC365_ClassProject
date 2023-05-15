@@ -90,7 +90,7 @@ def edit_player(id: int, position: str, irl_team_name: str):
             select * from players
             where players.player_id = (:id)
         """
-        cur = conn.execute(current_player,{"id": id}).fetchone()
+        cur = conn.execute(sqlalchemy.text(current_player),{"id": id}).fetchone()
         if(position == ""):
             position = cur.player_position
 
