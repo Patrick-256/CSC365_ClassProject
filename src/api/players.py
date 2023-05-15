@@ -20,17 +20,13 @@ def add_player(name: str, irl_team_name: str, position: str):
     """
 
     with db.engine.begin() as conn:
-
-
-        position_subq = """
-            Select * from positions
+        
+        pos_subq = """
+            Select (:position) from positions
         """
-        positions = []
-        pos_result = conn.execute(sqlalchemy.text(position_subq))
-        for row in pos_result:
-           positions.append(row.player_position)
-
-        if position not in positions:
+        pos_result = conn.execute(sqlalchemy.text(pos_subq),{"position":position})
+        
+        if pos_result is None:
            raise HTTPException(422, "Invalid position.")
 
 
@@ -64,25 +60,19 @@ def edit_player(id: int, position: str, irl_team_name: str):
     with db.engine.begin() as conn:
 
         id_subq = """
-            Select player_id from players
+            Select (:id) from players
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-           ids.append(row.player_id)
-
-        if id not in ids:
+        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
+        
+        if id_result is None:
            raise HTTPException(422, "Player ID not found.")
         
-        position_subq = """
-            Select * from positions
+        pos_subq = """
+            Select (:position) from positions
         """
-        positions = []
-        pos_result = conn.execute(sqlalchemy.text(position_subq))
-        for row in pos_result:
-           positions.append(row.player_position)
-
-        if position not in positions:
+        pos_result = conn.execute(sqlalchemy.text(pos_subq),{"position":position})
+        
+        if pos_result is None:
            raise HTTPException(422, "Invalid position.")
       
         current_player = """
@@ -129,14 +119,11 @@ def get_player(id: int):
     with db.engine.connect() as conn:
 
         id_subq = """
-            Select player_id from players
+            Select (:id) from players
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-           ids.append(row.player_id)
-
-        if id not in ids:
+        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
+        
+        if id_result is None:
            raise HTTPException(422, "Player ID not found.")
         
 
@@ -242,6 +229,3 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
         players.append(player)
 
     return players
-
-
-

@@ -11,20 +11,16 @@ from src.api import datatypes
 router = APIRouter()
 
 
-
 @router.post("/games/", tags=["games"])
 def add_game(game: datatypes.Game):
     """"""
 
     id_subq = """
-            Select player_id from players
+            Select (:player_id) from players
         """
-    ids = []
-    id_result = conn.execute(sqlalchemy.text(id_subq))
-    for row in id_result:
-        ids.append(row.player_id)
+    id_result = conn.execute(sqlalchemy.text(id_subq),{"player_id":game.player_id})
 
-    if game.player_id not in ids:
+    if id_result is None:
         raise HTTPException(422, "Player ID not found.")
 
     if game.num_goals < 0 or game.num_goals is None:
@@ -60,13 +56,10 @@ def add_game(game: datatypes.Game):
             'num_shots_on_goal': game.num_shots_on_goal,
             'num_turnovers': game.num_turnovers
         }
-        conn.execute(sqlalchemy.text(sql), params)
-
-        max_id = conn.execute(sqlalchemy.select(func.max(db.players.player_id))).scalar()
-        new_game_id = (max_id or 0) 
+        new_game_id = conn.execute(sqlalchemy.text(sql), params).fetchone()
 
 
-    return {"Game {} added!".format(new_game_id)}
+    return {"Game {} added!".format(new_game_id.game_id)}
         
 
 
@@ -77,16 +70,13 @@ def get_game_info(game_id: int):
 
     with db.engine.connect() as conn:
 
-        id_subq = """
-            Select game_id from games
+        game_subq = """
+            Select (:game) from games
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-            ids.append(row.game_id)
-
-        if game_id not in ids:
-            raise HTTPException(422, "Game ID not found.")
+        game_result = conn.execute(sqlalchemy.text(game_subq),{"game":game_id})
+        
+        if game_result is None:
+           raise HTTPException(422, "Game ID not found.")
    
         sql = """
             select  game_id,

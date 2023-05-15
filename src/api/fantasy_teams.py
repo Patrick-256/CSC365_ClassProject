@@ -20,26 +20,19 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
     with db.engine.begin() as conn:
 
         id_subq = """
-            Select user_id from users
+            Select (:id) from users
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-           ids.append(row.user_id)
-
-        if team.user_id not in ids:
-           raise HTTPException(422, "User ID not found.")
+        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":team.user_id})
         
+        if id_result is None:
+           raise HTTPException(422, "User ID not found.")
 
         league_subq = """
-            Select fantasy_league_id from fantasy_leagues
+            Select (:league) from fantasy_leagues
         """
-        leagues = []
-        league_result = conn.execute(sqlalchemy.text(league_subq))
-        for row in league_result:
-           leagues.append(row.fantasy_league_id)
+        league_result = conn.execute(sqlalchemy.text(league_subq),{"league":team.fantasy_league_id})
 
-        if team.fantasy_league_id not in leagues:
+        if league_result is None:
             team.fantasy_league_id = None
 
         sql = """
@@ -66,27 +59,21 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
     with db.engine.begin() as conn:
 
         id_subq = """
-            Select player_id from players
+            Select (:id) from players
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-           ids.append(row.player_id)
-
-        if player_team.player_id not in ids:
-            raise HTTPException(422, "Player ID not found.")
+        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
+        
+        if id_result is None:
+           raise HTTPException(422, "Player ID not found.")
         
 
         team_subq = """
-            Select fantasy_team_id from fantasy_teams
+            Select (:team_id) from fantasy_teams
         """
-        teams = []
-        team_result = conn.execute(sqlalchemy.text(team_subq))
-        for row in team_result:
-           teams.append(row.fantasy_team_id)
-
-        if player_team.fantasy_team_id not in teams:
-            raise HTTPException(422, "Team ID not found.")
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":player_team.fantasy_team_id})
+        
+        if team_result is None:
+           raise HTTPException(422, "Team ID not found.")
 
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
@@ -108,27 +95,21 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 
 
         id_subq = """
-            Select player_id from players
+            Select (:id) from players
         """
-        ids = []
-        id_result = conn.execute(sqlalchemy.text(id_subq))
-        for row in id_result:
-           ids.append(row.player_id)
-
-        if player_team.player_id not in ids:
-            raise HTTPException(422, "Player ID not found.")
+        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":player_team.player_id})
+        
+        if id_result is None:
+           raise HTTPException(422, "Player ID not found.")
         
 
         team_subq = """
-            Select fantasy_team_id from fantasy_teams
+            Select (:team_id) from fantasy_teams
         """
-        teams = []
-        team_result = conn.execute(sqlalchemy.text(team_subq))
-        for row in team_result:
-           teams.append(row.fantasy_team_id)
-
-        if player_team.fantasy_team_id not in teams:
-            raise HTTPException(422, "Team ID not found.")
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":player_team.fantasy_team_id})
+        
+        if team_result is None:
+           raise HTTPException(422, "Team ID not found.")
         
 
         sql = """
@@ -155,15 +136,12 @@ def get_fantasy_team_score(fantasy_team_id: int):
     with db.engine.connect() as conn:
         
         team_subq = """
-            Select fantasy_team_id from fantasy_teams
+            Select (:team_id) from fantasy_teams
         """
-        teams = []
-        team_result = conn.execute(sqlalchemy.text(team_subq))
-        for row in team_result:
-           teams.append(row.fantasy_team_id)
-
-        if fantasy_team_id not in teams:
-            raise HTTPException(422, "Team ID not found.")
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":team_id})
+        
+        if team_result is None:
+           raise HTTPException(422, "Team ID not found.")
 
         sql = """
                 SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
@@ -197,26 +175,20 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
     with db.engine.begin() as conn:
 
         team_subq = """
-            Select fantasy_team_id from fantasy_teams
+            Select (:team_id) from fantasy_teams
         """
-        teams = []
-        team_result = conn.execute(sqlalchemy.text(team_subq))
-        for row in team_result:
-           teams.append(row.fantasy_team_id)
-
-        if team_id not in teams:
-            raise HTTPException(422, "Team ID not found.")
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":team_id})
+        
+        if team_result is None:
+           raise HTTPException(422, "Team ID not found.")
         
         league_subq = """
-            Select fantasy_league_id from fantasy_leagues
+            Select (:league) from fantasy_leagues
         """
-        leagues = []
-        league_result = conn.execute(sqlalchemy.text(league_subq))
-        for row in league_result:
-           leagues.append(row.fantasy_league_id)
-
-        if league_id not in leagues:
-            raise HTTPException(422, "League ID not found.")
+        league_result = conn.execute(sqlalchemy.text(league_subq),{"league":league_id})
+        
+        if league_result is None:
+           raise HTTPException(422, "League not found.")
 
         sql = """
             update fantasy_teams
