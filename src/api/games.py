@@ -31,6 +31,17 @@ def add_game(game: datatypes.Game):
           game.num_turnovers = 0
     
     with db.engine.begin() as conn:
+
+        player_subq = """
+            select player_id from players
+            where player_id = (:player_id)
+            """
+        
+        player_result = conn.execute(sqlalchemy.text(player_subq),{"player_id":game.player_id}).fetchone()
+
+        if player_result is None:
+            raise HTTPException(422, "Player not found.")
+        
         sql = """
             INSERT INTO games (
                                 game_id,
@@ -86,18 +97,21 @@ def get_game_info(game_id: int):
             where games.game_id = (:game_id)"""
 
         try:
-            result = conn.execute(sqlalchemy.text(sql),{'game_id':game_id})
+            result = conn.execute(sqlalchemy.text(sql),{'game_id':game_id}).fetchall()
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
+        
+        if result is None:
+             raise HTTPException(422, "Game not found.")
         
         player_stats = []
 
         for row in result:
             ps = {
                     "game_id": row.game_id,
-                    "games.player_id": row.player_id,
-                    "players.player_name": row.player_name,
+                    "player_id": row.player_id,
+                    "player_name": row.player_name,
                     "num_goals": row.num_goals,
                     "num_assists": row.num_assists,
                     "num_passes": row.num_passes,

@@ -58,6 +58,15 @@ def edit_player(id: int, position: str, irl_team_name: str):
 
     with db.engine.begin() as conn:
 
+        player_subq = """
+            select player_id from players
+            where player_id = (:player_id)
+            """
+        
+        player_result = conn.execute(sqlalchemy.text(player_subq),{"player_id":id}).fetchone()
+
+        if player_result is None:
+            raise HTTPException(422, "Player not found.")
       
         current_player = """
             select * from players
@@ -105,35 +114,63 @@ def get_player(id: int):
 
     with db.engine.connect() as conn:
 
+        game_subq = """
+            select player_id from games
+            where player_id = (:player_id)
+            """
+        
+        player_in_game_result = conn.execute(sqlalchemy.text(game_subq),{"player_id":id}).fetchone()
 
-        sql = """
-              SELECT
-            players.player_id, 
-            players.player_name, 
-            players.player_position,
-            players.irl_team_name,
-            SUM(games.num_goals) AS total_num_goals,
-            SUM(games.num_assists) AS total_num_assists,
-            SUM(games.num_passes) AS total_num_passes,
-            SUM(games.num_shots_on_goal) AS total_num_shots_on_goal,
-            SUM(games.num_turnovers) AS total_num_turnovers
-            FROM
-                players
-            JOIN games ON games.player_id = players.player_id
-            WHERE
-                players.player_id = :id
-            GROUP BY
+        if player_in_game_result is not None:
+
+            sql = """
+                SELECT
                 players.player_id, 
                 players.player_name, 
                 players.player_position,
-                players.irl_team_name;
+                players.irl_team_name,
+                SUM(games.num_goals) AS total_num_goals,
+                SUM(games.num_assists) AS total_num_assists,
+                SUM(games.num_passes) AS total_num_passes,
+                SUM(games.num_shots_on_goal) AS total_num_shots_on_goal,
+                SUM(games.num_turnovers) AS total_num_turnovers
+                FROM
+                    players
+                JOIN games ON games.player_id = players.player_id
+                WHERE
+                    players.player_id = (:id)
+                GROUP BY
+                    players.player_id, 
+                    players.player_name, 
+                    players.player_position,
+                    players.irl_team_name;
 
-        """
-        try:
+            """
             result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
-        except sqlalchemy.exc.IntegrityError as e:
-            error_msg = e.orig.diag.message_detail
-            raise HTTPException(422, error_msg)
+
+            if result is None:
+                raise HTTPException(422, "Player not found.")
+        
+        else: 
+
+            p = """
+                SELECT
+                players.player_id, 
+                players.player_name, 
+                players.player_position,
+                players.irl_team_name
+                from players
+                where player_id = (:player_id)
+                """
+            p_result = conn.execute(sqlalchemy.text(p),{"player_id":id}).fetchone()
+
+            return {
+                "player_id": p_result.player_id,
+                "player_name": p_result.player_name,
+                "player_position": p_result.player_position,
+                "irl_team_name": p_result.irl_team_name
+            }
+
 
     return {
         "player_id": result.player_id,

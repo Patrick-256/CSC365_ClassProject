@@ -110,9 +110,20 @@ def get_fantasy_team_score(fantasy_team_id: int):
     
     with db.engine.connect() as conn:
         
+        team_has_players = """
+            select fantasy_team_id from player_fantasy_team
+            where fantasy_team_id = (:id)
+        """
+        thp_result = conn.execute(sqlalchemy.text(team_has_players),{"id": fantasy_team_id}).fetchone()
+
+        if thp_result is None:
+            return {
+                "team_id": fantasy_team_id,
+                "Total_score": 0
+        }
 
         sql = """
-                SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
+            SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
             FROM (
             SELECT player_fantasy_team.player_id, SUM(num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2) AS player_score
             FROM player_fantasy_team
@@ -129,10 +140,13 @@ def get_fantasy_team_score(fantasy_team_id: int):
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
+        
+        if result is None:
+            raise HTTPException(422, "Fantasy team not found.")
 
     return {
         "team_id": fantasy_team_id,
-        "Total_score": result.total_team_score
+        "Total_score": result[1]
     }
     
 
@@ -145,6 +159,16 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
 
     with db.engine.begin() as conn:
+
+        team_subq = """
+            select fantasy_team_id from fantasy_teams
+            where fantasy_team_id = (:fantasy_team_id)
+            """
+        
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"fantasy_team_id":team_id}).fetchone()
+
+        if team_result is None:
+            raise HTTPException(422, "Team not found.")
 
         sql = """
             update fantasy_teams
