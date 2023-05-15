@@ -6,7 +6,7 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import datatypes
+from src.api import datatypes
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def add_game(game: datatypes.Game):
     ids = []
     id_result = conn.execute(sqlalchemy.text(id_subq))
     for row in id_result:
-        ids.append(row)
+        ids.append(row.player_id)
 
     if game.player_id not in ids:
         raise HTTPException(422, "Player ID not found.")
@@ -62,8 +62,11 @@ def add_game(game: datatypes.Game):
         }
         conn.execute(sqlalchemy.text(sql), params)
 
+        max_id = conn.execute(sqlalchemy.select(func.max(db.players.player_id))).scalar()
+        new_game_id = (max_id or 0) 
 
-    return {"New game added!"}
+
+    return {"Game {} added!".format(new_game_id)}
         
 
 
@@ -80,7 +83,7 @@ def get_game_info(game_id: int):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-            ids.append(row)
+            ids.append(row.game_id)
 
         if game_id not in ids:
             raise HTTPException(422, "Game ID not found.")

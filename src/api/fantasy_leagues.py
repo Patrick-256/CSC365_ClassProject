@@ -6,7 +6,7 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import pydantic.dataclasses
+from src.api import datatypes
 
 router = APIRouter()
 
@@ -26,9 +26,9 @@ def create_fantasy_league(new_fantasy_league_name: str):
     params = {'new_name':new_fantasy_league_name}
 
     with db.engine.begin() as conn:
-        conn.execute(sqlalchemy.text(insert_statement),params)
+        new_league_id = conn.execute(sqlalchemy.text(insert_statement),params)
 
-    return {"Added fantasy league to the database!"}
+    return {"Added fantasy league {} to the database!".format(new_league_id.fantasy_league_id)}
 
 
 
@@ -49,7 +49,8 @@ def list_fantasy_leagues():
                 "fantasy_league_name":row.fantasy_league_name,
                 "created_at":row.created_at,
             })
-        return res_json
+    
+    return res_json
 
 
 @router.get("/fantasy_leagues/{fantasy_league_id}", tags=["fantasy_leagues"])
@@ -79,7 +80,8 @@ def get_top_teams_in_fantasy_league(id: int):
                 "fantasy_team_id": row.fantasy_team_id,
                 "total_points": row.total_points,
             })
-        return res_json
+    
+    return res_json
 
 
     

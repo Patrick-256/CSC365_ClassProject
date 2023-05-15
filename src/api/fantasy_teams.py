@@ -6,7 +6,7 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import datatypes
+from src.api import datatypes
 
 router = APIRouter()
 
@@ -25,7 +25,7 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-           ids.append(row)
+           ids.append(row.user_id)
 
         if team.user_id not in ids:
            raise HTTPException(422, "User ID not found.")
@@ -37,7 +37,7 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
         leagues = []
         league_result = conn.execute(sqlalchemy.text(league_subq))
         for row in league_result:
-           leagues.append(row)
+           leagues.append(row.fantasy_league_id)
 
         if team.fantasy_league_id not in leagues:
             team.fantasy_league_id = None
@@ -52,9 +52,10 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
                   'fantasy_league_id': team.fantasy_league_id
                   }
 
-        conn.execute(sqlalchemy.text(sql),params)
+        new_team_id = conn.execute(sqlalchemy.text(sql),params)
 
-    return {"New team added"}
+
+    return {"Team {} added".format(new_team_id.fantasy_team_id)}
     
 
 @router.post("/fantasy_teams/players", tags=["fantasy_teams"])
@@ -70,7 +71,7 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-           ids.append(row)
+           ids.append(row.player_id)
 
         if player_team.player_id not in ids:
             raise HTTPException(422, "Player ID not found.")
@@ -82,7 +83,7 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
         teams = []
         team_result = conn.execute(sqlalchemy.text(team_subq))
         for row in team_result:
-           teams.append(row)
+           teams.append(row.fantasy_team_id)
 
         if player_team.fantasy_team_id not in teams:
             raise HTTPException(422, "Team ID not found.")
@@ -95,7 +96,7 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
 
         conn.execute(sqlalchemy.text(sql),params)
 
-    return {"Added player to team"}
+    return {"Added player {} to team {}".format(player_team.player_id, player_team.fantasy_team_id)}
 
 
 @router.delete("/fantasy_teams/{fantasy_team_id}/players", tags=["fantasy_teams"])
@@ -112,7 +113,7 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-           ids.append(row)
+           ids.append(row.player_id)
 
         if player_team.player_id not in ids:
             raise HTTPException(422, "Player ID not found.")
@@ -124,7 +125,7 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
         teams = []
         team_result = conn.execute(sqlalchemy.text(team_subq))
         for row in team_result:
-           teams.append(row)
+           teams.append(row.fantasy_team_id)
 
         if player_team.fantasy_team_id not in teams:
             raise HTTPException(422, "Team ID not found.")
@@ -142,7 +143,7 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 
         conn.execute(sqlalchemy.text(sql),params)
 
-    return {"Removed player from team"}
+    return {"Removed player {} from team {}".format(player_team.player_id, player_team.fantasy_team_id)}
 
 
 
@@ -159,7 +160,7 @@ def get_fantasy_team_score(fantasy_team_id: int):
         teams = []
         team_result = conn.execute(sqlalchemy.text(team_subq))
         for row in team_result:
-           teams.append(row)
+           teams.append(row.fantasy_team_id)
 
         if fantasy_team_id not in teams:
             raise HTTPException(422, "Team ID not found.")
@@ -201,7 +202,7 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
         teams = []
         team_result = conn.execute(sqlalchemy.text(team_subq))
         for row in team_result:
-           teams.append(row)
+           teams.append(row.fantasy_team_id)
 
         if team_id not in teams:
             raise HTTPException(422, "Team ID not found.")
@@ -212,7 +213,7 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
         leagues = []
         league_result = conn.execute(sqlalchemy.text(league_subq))
         for row in league_result:
-           leagues.append(row)
+           leagues.append(row.fantasy_league_id)
 
         if league_id not in leagues:
             raise HTTPException(422, "League ID not found.")
@@ -228,4 +229,4 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
         conn.execute(sqlalchemy.text(sql),params)
 
-    return ("Team addded to fantasy league")
+    return ("Team {} addded to fantasy league {}".format(team_id, league_id))
