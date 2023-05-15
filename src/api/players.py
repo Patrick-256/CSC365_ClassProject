@@ -6,7 +6,7 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import datatypes
+from src.api import datatypes
 router = APIRouter()
 
 
@@ -28,7 +28,7 @@ def add_player(name: str, irl_team_name: str, position: str):
         positions = []
         pos_result = conn.execute(sqlalchemy.text(position_subq))
         for row in pos_result:
-           positions.append(row)
+           positions.append(row.player_position)
 
         if position not in positions:
            raise HTTPException(422, "Invalid position.")
@@ -47,7 +47,10 @@ def add_player(name: str, irl_team_name: str, position: str):
 
         conn.execute(sqlalchemy.text(sql),params)
 
-    return {"New player added."}
+        max_id = conn.execute(sqlalchemy.select(func.max(db.players.player_id))).scalar()
+        new_player_id = (max_id or 0) + 1
+
+    return {"Player {} added.".format(new_player_id)}
 
     
 @router.put("/players/{id}/info", tags=["players"])
@@ -67,7 +70,7 @@ def edit_player(id: int, position: str, irl_team_name: str):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-           ids.append(row)
+           ids.append(row.player_id)
 
         if id not in ids:
            raise HTTPException(422, "Player ID not found.")
@@ -78,11 +81,21 @@ def edit_player(id: int, position: str, irl_team_name: str):
         positions = []
         pos_result = conn.execute(sqlalchemy.text(position_subq))
         for row in pos_result:
-           positions.append(row)
+           positions.append(row.player_position)
 
         if position not in positions:
            raise HTTPException(422, "Invalid position.")
       
+        current_player = """
+            select * from players
+            where players.player_id = (:id)
+        """
+        cur = conn.execute(current_player,{"id": id}).fetchone()
+        if(position == ""):
+            position = cur.player_position
+
+        if(irl_team_name == ""):
+            irl_team_name = cur.irs_team_name
 
         sql = """
             update players
@@ -99,7 +112,7 @@ def edit_player(id: int, position: str, irl_team_name: str):
 
         conn.execute(sqlalchemy.text(sql),params)
 
-    return {"Edited player info."}
+    return {"Edited player {} info.".format(id)}
 
 
 @router.get("/players/{id}", tags=["players"])
@@ -122,7 +135,7 @@ def get_player(id: int):
         ids = []
         id_result = conn.execute(sqlalchemy.text(id_subq))
         for row in id_result:
-           ids.append(row)
+           ids.append(row.player_id)
 
         if id not in ids:
            raise HTTPException(422, "Player ID not found.")

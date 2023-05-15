@@ -4,7 +4,7 @@ from collections import Counter
 from fastapi.params import Query
 from src import database as db
 import sqlalchemy
-import datatypes
+from src.api import datatypes
 from sqlalchemy import func
 from sqlalchemy import select
 

@@ -6,7 +6,7 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import pydantic.dataclasses
+from src.api import datatypes
 
 router = APIRouter()
 
