@@ -52,12 +52,10 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
                   'fantasy_league_id': team.fantasy_league_id
                   }
 
-        conn.execute(sqlalchemy.text(sql),params)
+        new_team_id = conn.execute(sqlalchemy.text(sql),params)
 
-        max_id = conn.execute(sqlalchemy.select(func.max(db.fantasy_teams.fantasy_team_id))).scalar()
-        new_team_id = (max_id or 0) + 1
 
-    return {"Team {} added".format(new_team_id)}
+    return {"Team {} added".format(new_team_id.fantasy_team_id)}
     
 
 @router.post("/fantasy_teams/players", tags=["fantasy_teams"])

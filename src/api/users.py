@@ -25,10 +25,9 @@ def add_user(new_user: datatypes.User):
     params = {'user_name':new_user.user_name,'is_admin':new_user.is_admin}
 
     with db.engine.begin() as conn:
-        addUserResult = conn.execute(sqlalchemy.text(insert_statement),params)
+        new_user_id = conn.execute(sqlalchemy.text(insert_statement),params)
 
-        print(addUserResult)
-    return {"Added user to the database!"}
+    return {"Added user {} to the database!".format(new_user_id.user_id)}
 
 
 

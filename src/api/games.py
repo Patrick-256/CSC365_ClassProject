@@ -62,8 +62,11 @@ def add_game(game: datatypes.Game):
         }
         conn.execute(sqlalchemy.text(sql), params)
 
+        max_id = conn.execute(sqlalchemy.select(func.max(db.players.player_id))).scalar()
+        new_game_id = (max_id or 0) 
 
-    return {"New game added!"}
+
+    return {"Game {} added!".format(new_game_id)}
         
 
 

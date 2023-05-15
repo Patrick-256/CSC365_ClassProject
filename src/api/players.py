@@ -37,7 +37,7 @@ def add_player(name: str, irl_team_name: str, position: str):
         sql = """
             INSERT INTO players (player_name, player_position, irl_team_name)
             VALUES ((:name), (:position), (:irl_team_name))
-      """
+        """
 
         params = {
             'name':name,
@@ -45,12 +45,11 @@ def add_player(name: str, irl_team_name: str, position: str):
             'irl_team_name': irl_team_name
         }
 
-        conn.execute(sqlalchemy.text(sql),params)
+        new_player_id = conn.execute(sqlalchemy.text(sql),params)
 
-        max_id = conn.execute(sqlalchemy.select(func.max(db.players.player_id))).scalar()
-        new_player_id = (max_id or 0) + 1
+    
 
-    return {"Player {} added.".format(new_player_id)}
+    return {"Player {} added.".format(new_player_id.player_id)}
 
     
 @router.put("/players/{id}/info", tags=["players"])
