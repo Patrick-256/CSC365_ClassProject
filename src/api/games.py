@@ -8,20 +8,16 @@ import sqlalchemy
 from sqlalchemy import func
 from src.api import datatypes
 
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import ForeignKeyViolation
+
+
 router = APIRouter()
 
 
 @router.post("/games/", tags=["games"])
 def add_game(game: datatypes.Game):
     """"""
-
-    id_subq = """
-            Select (:player_id) from players
-        """
-    id_result = conn.execute(sqlalchemy.text(id_subq),{"player_id":game.player_id})
-
-    if id_result is None:
-        raise HTTPException(422, "Player ID not found.")
 
     if game.num_goals < 0 or game.num_goals is None:
           game.num_goals = 0
@@ -45,6 +41,7 @@ def add_game(game: datatypes.Game):
                                 num_shots_on_goal,
                                 num_turnovers)
             VALUES (:game_id, :player_id, :num_goals, :num_assists, :num_passes, :num_shots_on_goal, :num_turnovers)
+            returning game_id
         """
         
         params = {
@@ -56,10 +53,15 @@ def add_game(game: datatypes.Game):
             'num_shots_on_goal': game.num_shots_on_goal,
             'num_turnovers': game.num_turnovers
         }
-        new_game_id = conn.execute(sqlalchemy.text(sql), params).fetchone()
+
+        try:
+            new_game_id = conn.execute(sqlalchemy.text(sql), params).scalar_one()
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
 
-    return {"Game {} added!".format(new_game_id.game_id)}
+    return {"Game {} added!".format(new_game_id)}
         
 
 
@@ -69,14 +71,6 @@ def get_game_info(game_id: int):
     """
 
     with db.engine.connect() as conn:
-
-        game_subq = """
-            Select (:game) from games
-        """
-        game_result = conn.execute(sqlalchemy.text(game_subq),{"game":game_id})
-        
-        if game_result is None:
-           raise HTTPException(422, "Game ID not found.")
    
         sql = """
             select  game_id,
@@ -91,8 +85,12 @@ def get_game_info(game_id: int):
             join players on games.player_id = players.player_id
             where games.game_id = (:game_id)"""
 
-        result = conn.execute(sqlalchemy.text(sql),
-                              {'game_id':game_id})
+        try:
+            result = conn.execute(sqlalchemy.text(sql),{'game_id':game_id})
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
+        
         player_stats = []
 
         for row in result:

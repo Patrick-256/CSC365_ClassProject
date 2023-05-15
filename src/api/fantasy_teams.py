@@ -8,6 +8,10 @@ import sqlalchemy
 from sqlalchemy import func
 from src.api import datatypes
 
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import ForeignKeyViolation
+
+
 router = APIRouter()
 
 
@@ -19,14 +23,7 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
     
     with db.engine.begin() as conn:
 
-        id_subq = """
-            Select (:id) from users
-        """
-        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":team.user_id})
         
-        if id_result is None:
-           raise HTTPException(422, "User ID not found.")
-
         league_subq = """
             Select (:league) from fantasy_leagues
         """
@@ -37,7 +34,8 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
 
         sql = """
             INSERT INTO fantasy_teams (fantasy_team_name, user_id)
-            VALUES ((:name),(:user_id))"""
+            VALUES ((:name),(:user_id))
+            returning fantasy_team_id"""
         
         params = {
                   'name': team.fantasy_team_name, 
@@ -45,10 +43,14 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
                   'fantasy_league_id': team.fantasy_league_id
                   }
 
-        new_team_id = conn.execute(sqlalchemy.text(sql),params)
+        try:
+            new_team_id = conn.execute(sqlalchemy.text(sql),params).scalar_one()
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
 
-    return {"Team {} added".format(new_team_id.fantasy_team_id)}
+    return {"Team {} added".format(new_team_id)}
     
 
 @router.post("/fantasy_teams/players", tags=["fantasy_teams"])
@@ -58,30 +60,18 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
 
     with db.engine.begin() as conn:
 
-        id_subq = """
-            Select (:id) from players
-        """
-        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
-        
-        if id_result is None:
-           raise HTTPException(422, "Player ID not found.")
-        
-
-        team_subq = """
-            Select (:team_id) from fantasy_teams
-        """
-        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":player_team.fantasy_team_id})
-        
-        if team_result is None:
-           raise HTTPException(422, "Team ID not found.")
-
+    
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
-            VALUES ((:player_id),(:fantasy_team_id))"""
+            VALUES ((:player_id),(:fantasy_team_id))
+            """
         
         params = {'player_id':player_team.player_id, 'fantasy_team_id':player_team.fantasy_team_id}
-
-        conn.execute(sqlalchemy.text(sql),params)
+        try:
+            conn.execute(sqlalchemy.text(sql),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return {"Added player {} to team {}".format(player_team.player_id, player_team.fantasy_team_id)}
 
@@ -93,25 +83,6 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 
     with db.engine.begin() as conn:
 
-
-        id_subq = """
-            Select (:id) from players
-        """
-        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":player_team.player_id})
-        
-        if id_result is None:
-           raise HTTPException(422, "Player ID not found.")
-        
-
-        team_subq = """
-            Select (:team_id) from fantasy_teams
-        """
-        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":player_team.fantasy_team_id})
-        
-        if team_result is None:
-           raise HTTPException(422, "Team ID not found.")
-        
-
         sql = """
             delete from player_fantasy_team
             where player_id = (:player_id) and fantasy_team_id = (:fantasy_team_id)
@@ -122,7 +93,11 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
                 'fantasy_team_id': player_team.fantasy_team_id
                   }
 
-        conn.execute(sqlalchemy.text(sql),params)
+        try:
+            conn.execute(sqlalchemy.text(sql),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return {"Removed player {} from team {}".format(player_team.player_id, player_team.fantasy_team_id)}
 
@@ -135,13 +110,6 @@ def get_fantasy_team_score(fantasy_team_id: int):
     
     with db.engine.connect() as conn:
         
-        team_subq = """
-            Select (:team_id) from fantasy_teams
-        """
-        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":fantasy_team_id})
-        
-        if team_result is None:
-           raise HTTPException(422, "Team ID not found.")
 
         sql = """
                 SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
@@ -156,7 +124,11 @@ def get_fantasy_team_score(fantasy_team_id: int):
             GROUP BY player_fantasy_team.fantasy_team_id
             """
 
-        result = conn.execute(sqlalchemy.text(sql),{'fantasy_team_id':fantasy_team_id}).fetchone()
+        try:
+            result = conn.execute(sqlalchemy.text(sql),{'fantasy_team_id':fantasy_team_id}).fetchone()
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return {
         "team_id": fantasy_team_id,
@@ -174,22 +146,6 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
     with db.engine.begin() as conn:
 
-        team_subq = """
-            Select (:team_id) from fantasy_teams
-        """
-        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":team_id})
-        
-        if team_result is None:
-           raise HTTPException(422, "Team ID not found.")
-        
-        league_subq = """
-            Select (:league) from fantasy_leagues
-        """
-        league_result = conn.execute(sqlalchemy.text(league_subq),{"league":league_id})
-        
-        if league_result is None:
-           raise HTTPException(422, "League not found.")
-
         sql = """
             update fantasy_teams
             set fantasy_league_id = (:league_id)
@@ -199,6 +155,10 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
         params = {'league_id': league_id, 'team_id': team_id}
             
 
-        conn.execute(sqlalchemy.text(sql),params)
+        try:
+            conn.execute(sqlalchemy.text(sql),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return ("Team {} addded to fantasy league {}".format(team_id, league_id))

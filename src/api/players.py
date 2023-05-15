@@ -7,6 +7,10 @@ from src import database as db
 import sqlalchemy
 from sqlalchemy import func
 from src.api import datatypes
+
+from sqlalchemy.exc import IntegrityError
+from psycopg2.errors import ForeignKeyViolation
+
 router = APIRouter()
 
 
@@ -20,19 +24,12 @@ def add_player(name: str, irl_team_name: str, position: str):
     """
 
     with db.engine.begin() as conn:
-        
-        pos_subq = """
-            Select (:position) from positions
-        """
-        pos_result = conn.execute(sqlalchemy.text(pos_subq),{"position":position})
-        
-        if pos_result is None:
-           raise HTTPException(422, "Invalid position.")
 
-
+        
         sql = """
             INSERT INTO players (player_name, player_position, irl_team_name)
             VALUES ((:name), (:position), (:irl_team_name))
+            returning player_id
         """
 
         params = {
@@ -40,12 +37,14 @@ def add_player(name: str, irl_team_name: str, position: str):
             'position': position,
             'irl_team_name': irl_team_name
         }
+        try:
+            new_player_id = conn.execute(sqlalchemy.text(sql),params).scalar_one()
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
-        new_player_id = conn.execute(sqlalchemy.text(sql),params)
 
-    
-
-    return {"Player {} added.".format(new_player_id.player_id)}
+    return {"Player {} added.".format(new_player_id)}
 
     
 @router.put("/players/{id}/info", tags=["players"])
@@ -59,21 +58,6 @@ def edit_player(id: int, position: str, irl_team_name: str):
 
     with db.engine.begin() as conn:
 
-        id_subq = """
-            Select (:id) from players
-        """
-        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
-        
-        if id_result is None:
-           raise HTTPException(422, "Player ID not found.")
-        
-        pos_subq = """
-            Select (:position) from positions
-        """
-        pos_result = conn.execute(sqlalchemy.text(pos_subq),{"position":position})
-        
-        if pos_result is None:
-           raise HTTPException(422, "Invalid position.")
       
         current_player = """
             select * from players
@@ -98,8 +82,11 @@ def edit_player(id: int, position: str, irl_team_name: str):
           'position': position,
           'id': id
          }
-
-        conn.execute(sqlalchemy.text(sql),params)
+        try:
+            conn.execute(sqlalchemy.text(sql),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return {"Edited player {} info.".format(id)}
 
@@ -118,14 +105,6 @@ def get_player(id: int):
 
     with db.engine.connect() as conn:
 
-        id_subq = """
-            Select (:id) from players
-        """
-        id_result = conn.execute(sqlalchemy.text(id_subq),{"id":id})
-        
-        if id_result is None:
-           raise HTTPException(422, "Player ID not found.")
-        
 
         sql = """
               SELECT
@@ -150,8 +129,11 @@ def get_player(id: int):
                 players.irl_team_name;
 
         """
-
-        result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
+        try:
+            result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
 
     return {
         "player_id": result.player_id,
