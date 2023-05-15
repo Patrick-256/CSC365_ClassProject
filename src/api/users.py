@@ -47,7 +47,7 @@ def list_users(
     users_query = """
     SELECT *
     FROM users
-    WHERE user_name LIKE '%(:user_name)%'
+    WHERE (:user_name = '' OR user_name LIKE '%' || :user_name || '%')
     OFFSET (:offset)
     LIMIT (:limit)
     """
