@@ -6,49 +6,41 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import pydantic.dataclasses
+import datatypes
 
 router = APIRouter()
 
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    
-    
-@pydantic.dataclasses.dataclass
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-@pydantic.dataclasses.dataclass
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    user_id: int
-    fantasy_league_id: int 
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
-
-@pydantic.dataclasses.dataclass
-class PlayerTeam:
-    player_id: int
-    fantasy_team_id: int
 
 @router.post("/fantasy_teams/", tags=["fantasy_teams"])
-def create_fantasy_team(team: Fantasy_Team):
+def create_fantasy_team(team: datatypes.Fantasy_Team):
     """Adds a new fantasy team with the
        specified user id
        """
     
     with db.engine.begin() as conn:
 
+        id_subq = """
+            Select user_id from users
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+           ids.append(row)
+
+        if team.user_id not in ids:
+           raise HTTPException(422, "User ID not found.")
+        
+
+        league_subq = """
+            Select fantasy_league_id from fantasy_leagues
+        """
+        leagues = []
+        league_result = conn.execute(sqlalchemy.text(league_subq))
+        for row in league_result:
+           leagues.append(row)
+
+        if team.fantasy_league_id not in leagues:
+            team.fantasy_league_id = None
 
         sql = """
             INSERT INTO fantasy_teams (fantasy_team_name, user_id)
@@ -56,7 +48,8 @@ def create_fantasy_team(team: Fantasy_Team):
         
         params = {
                   'name': team.fantasy_team_name, 
-                  'user_id': team.user_id
+                  'user_id': team.user_id,
+                  'fantasy_league_id': team.fantasy_league_id
                   }
 
         conn.execute(sqlalchemy.text(sql),params)
@@ -65,12 +58,34 @@ def create_fantasy_team(team: Fantasy_Team):
     
 
 @router.post("/fantasy_teams/players", tags=["fantasy_teams"])
-def add_player_to_fantasy_team(player_team: PlayerTeam):
+def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
     """adds a player to the specified fantasy team
     """
 
     with db.engine.begin() as conn:
 
+        id_subq = """
+            Select player_id from players
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+           ids.append(row)
+
+        if player_team.player_id not in ids:
+            raise HTTPException(422, "Player ID not found.")
+        
+
+        team_subq = """
+            Select fantasy_team_id from fantasy_teams
+        """
+        teams = []
+        team_result = conn.execute(sqlalchemy.text(team_subq))
+        for row in team_result:
+           teams.append(row)
+
+        if player_team.fantasy_team_id not in teams:
+            raise HTTPException(422, "Team ID not found.")
 
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
@@ -84,12 +99,36 @@ def add_player_to_fantasy_team(player_team: PlayerTeam):
 
 
 @router.delete("/fantasy_teams/{fantasy_team_id}/players", tags=["fantasy_teams"])
-def remove_player_from_fantasy_team(player_team: PlayerTeam):
+def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
     """removes a player from the specified fantasy team
     """
 
     with db.engine.begin() as conn:
 
+
+        id_subq = """
+            Select player_id from players
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+           ids.append(row)
+
+        if player_team.player_id not in ids:
+            raise HTTPException(422, "Player ID not found.")
+        
+
+        team_subq = """
+            Select fantasy_team_id from fantasy_teams
+        """
+        teams = []
+        team_result = conn.execute(sqlalchemy.text(team_subq))
+        for row in team_result:
+           teams.append(row)
+
+        if player_team.fantasy_team_id not in teams:
+            raise HTTPException(422, "Team ID not found.")
+        
 
         sql = """
             delete from player_fantasy_team
@@ -114,6 +153,17 @@ def get_fantasy_team_score(fantasy_team_id: int):
     
     with db.engine.connect() as conn:
         
+        team_subq = """
+            Select fantasy_team_id from fantasy_teams
+        """
+        teams = []
+        team_result = conn.execute(sqlalchemy.text(team_subq))
+        for row in team_result:
+           teams.append(row)
+
+        if fantasy_team_id not in teams:
+            raise HTTPException(422, "Team ID not found.")
+
         sql = """
                 SELECT player_fantasy_team.fantasy_team_id, SUM(player_score) AS total_team_score
             FROM (
@@ -145,6 +195,27 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
     with db.engine.begin() as conn:
 
+        team_subq = """
+            Select fantasy_team_id from fantasy_teams
+        """
+        teams = []
+        team_result = conn.execute(sqlalchemy.text(team_subq))
+        for row in team_result:
+           teams.append(row)
+
+        if team_id not in teams:
+            raise HTTPException(422, "Team ID not found.")
+        
+        league_subq = """
+            Select fantasy_league_id from fantasy_leagues
+        """
+        leagues = []
+        league_result = conn.execute(sqlalchemy.text(league_subq))
+        for row in league_result:
+           leagues.append(row)
+
+        if league_id not in leagues:
+            raise HTTPException(422, "League ID not found.")
 
         sql = """
             update fantasy_teams

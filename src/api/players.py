@@ -6,40 +6,9 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import pydantic.dataclasses
-
+import datatypes
 router = APIRouter()
 
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
-    
-@pydantic.dataclasses.dataclass
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-@pydantic.dataclasses.dataclass
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    user_id: int
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
-
-@pydantic.dataclasses.dataclass
-class PlayerTeam:
-    player_id: int
-    fantasy_team_id: int
 
 @router.post("/players/", tags=["players"])
 def add_player(name: str, irl_team_name: str, position: str):
@@ -53,18 +22,30 @@ def add_player(name: str, irl_team_name: str, position: str):
     with db.engine.begin() as conn:
 
 
-      sql = """
+        position_subq = """
+            Select * from positions
+        """
+        positions = []
+        pos_result = conn.execute(sqlalchemy.text(position_subq))
+        for row in pos_result:
+           positions.append(row)
+
+        if position not in positions:
+           raise HTTPException(422, "Invalid position.")
+
+
+        sql = """
             INSERT INTO players (player_name, player_position, irl_team_name)
             VALUES ((:name), (:position), (:irl_team_name))
       """
 
-      params = {
+        params = {
             'name':name,
             'position': position,
             'irl_team_name': irl_team_name
-      }
+        }
 
-      conn.execute(sqlalchemy.text(sql),params)
+        conn.execute(sqlalchemy.text(sql),params)
 
     return {"New player added."}
 
@@ -80,20 +61,43 @@ def edit_player(id: int, position: str, irl_team_name: str):
 
     with db.engine.begin() as conn:
 
-      sql = """
+        id_subq = """
+            Select player_id from players
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+           ids.append(row)
+
+        if id not in ids:
+           raise HTTPException(422, "Player ID not found.")
+        
+        position_subq = """
+            Select * from positions
+        """
+        positions = []
+        pos_result = conn.execute(sqlalchemy.text(position_subq))
+        for row in pos_result:
+           positions.append(row)
+
+        if position not in positions:
+           raise HTTPException(422, "Invalid position.")
+      
+
+        sql = """
             update players
             set irl_team_name = (:irl_team_name),
                 player_position = (:position)
             where player_id = (:id)
-      """
+        """
 
-      params = {
+        params = {
           'irl_team_name': irl_team_name,
           'position': position,
           'id': id
-      }
+         }
 
-      conn.execute(sqlalchemy.text(sql),params)
+        conn.execute(sqlalchemy.text(sql),params)
 
     return {"Edited player info."}
 
@@ -112,7 +116,19 @@ def get_player(id: int):
 
     with db.engine.connect() as conn:
 
-      sql = """
+        id_subq = """
+            Select player_id from players
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+           ids.append(row)
+
+        if id not in ids:
+           raise HTTPException(422, "Player ID not found.")
+        
+
+        sql = """
               SELECT
             players.player_id, 
             players.player_name, 
@@ -134,9 +150,9 @@ def get_player(id: int):
                 players.player_position,
                 players.irl_team_name;
 
-      """
+        """
 
-      result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
+        result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
 
     return {
         "player_id": result.player_id,
@@ -168,7 +184,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
 
     with db.engine.connect() as conn:
 
-      sql = """
+        sql = """
               SELECT
             players.player_id, 
             players.player_name, 
@@ -191,16 +207,16 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
             limit (:limit)
             """.format(sort.value)
       
-      params = {
-          'limit': limit
-      }
+        params = {
+            'limit': limit
+        }
       
-      result = conn.execute(sqlalchemy.text(sql), params)
+        result = conn.execute(sqlalchemy.text(sql), params)
 
     players = []
 
     for row in result:
-      player = {
+        player = {
         "player_id": row.player_id,
         "player_name": row.player_name,
         "player_position": row.player_position,
@@ -210,8 +226,8 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
         "total_num_passes": row.num_passes,
         "total_num_shots_on_goal": row.num_shots_on_goal,
         "total_num_turnovers": row.num_turnovers   
-    }
-      players.append(player)
+      }
+        players.append(player)
 
     return players
 

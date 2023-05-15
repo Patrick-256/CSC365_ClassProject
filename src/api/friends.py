@@ -5,48 +5,13 @@ from collections import Counter
 from fastapi.params import Query
 from src import database as db
 import sqlalchemy
-import pydantic.dataclasses
+import datatypes
 
 router = APIRouter()
 
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
-    
-@pydantic.dataclasses.dataclass
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-@pydantic.dataclasses.dataclass
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    user_id: int
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
-
-@pydantic.dataclasses.dataclass
-class PlayerTeam:
-    player_id: int
-    fantasy_team_id: int
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
 
 @router.post("/friends/", tags=["users"])
-def add_friend(new_friend: Friend):
+def add_friend(new_friend: datatypes.Friend):
     """
     adds a friendship between two user ids
     """

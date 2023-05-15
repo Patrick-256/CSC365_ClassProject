@@ -6,58 +6,26 @@ from fastapi.params import Query
 from src import database as db
 import sqlalchemy
 from sqlalchemy import func
-import pydantic.dataclasses
+import datatypes
 
 router = APIRouter()
-
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
-    
-@pydantic.dataclasses.dataclass
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-@pydantic.dataclasses.dataclass
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    user_id: int
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
-
-@pydantic.dataclasses.dataclass
-class PlayerTeam:
-    player_id: int
-    fantasy_team_id: int
-
-@pydantic.dataclasses.dataclass
-class Game:
-    game_id: int
-    player_id: int
-    num_goals: int
-    num_assists: int
-    num_passes: int
-    num_shots_on_goal: int
-    num_turnovers: int 
 
 
 
 @router.post("/games/", tags=["games"])
-def add_game(game: Game):
+def add_game(game: datatypes.Game):
     """"""
 
-    #if player_id not in players edge case check
+    id_subq = """
+            Select player_id from players
+        """
+    ids = []
+    id_result = conn.execute(sqlalchemy.text(id_subq))
+    for row in id_result:
+        ids.append(row)
+
+    if game.player_id not in ids:
+        raise HTTPException(422, "Player ID not found.")
 
     if game.num_goals < 0 or game.num_goals is None:
           game.num_goals = 0
@@ -105,9 +73,20 @@ def get_game_info(game_id: int):
     """
 
     with db.engine.connect() as conn:
+
+        id_subq = """
+            Select game_id from games
+        """
+        ids = []
+        id_result = conn.execute(sqlalchemy.text(id_subq))
+        for row in id_result:
+            ids.append(row)
+
+        if game_id not in ids:
+            raise HTTPException(422, "Game ID not found.")
    
         sql = """
-            select game_id,
+            select  game_id,
                     games.player_id,
                     players.player_name,
                     num_goals,

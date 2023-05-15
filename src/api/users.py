@@ -4,46 +4,16 @@ from collections import Counter
 from fastapi.params import Query
 from src import database as db
 import sqlalchemy
-import pydantic.dataclasses
+import datatypes
 from sqlalchemy import func
 from sqlalchemy import select
 
 
 router = APIRouter()
 
-@pydantic.dataclasses.dataclass
-class User:
-    # user_id: int
-    user_name: str
-    is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
-    
-@pydantic.dataclasses.dataclass
-class Player:
-    player_id: int
-    player_name: str
-    player_position: str
-    irl_team_name: str
-
-@pydantic.dataclasses.dataclass
-class Fantasy_Team:
-    fantasy_team_id: int
-    fantasy_team_name: str
-    user_id: int
-
-@pydantic.dataclasses.dataclass
-class Friend:
-    user1_id: int
-    user2_id: int
-
-@pydantic.dataclasses.dataclass
-class PlayerTeam:
-    player_id: int
-    fantasy_team_id: int
 
 @router.post("/users/", tags=["users"])
-def add_user(new_user: User):
+def add_user(new_user: datatypes.User):
     """
     This endpoint adds a user to the database
     """
