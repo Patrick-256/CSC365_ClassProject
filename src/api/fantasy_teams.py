@@ -138,7 +138,7 @@ def get_fantasy_team_score(fantasy_team_id: int):
         team_subq = """
             Select (:team_id) from fantasy_teams
         """
-        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":team_id})
+        team_result = conn.execute(sqlalchemy.text(team_subq),{"team_id":fantasy_team_id})
         
         if team_result is None:
            raise HTTPException(422, "Team ID not found.")
