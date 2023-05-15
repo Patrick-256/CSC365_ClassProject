@@ -14,8 +14,8 @@ router = APIRouter()
 @router.post("/fantasy_leagues/", tags=["fantasy_leagues"])
 def create_fantasy_league(new_fantasy_league_name: str):
     """
-    Adds a new fantasy league with the
-    specified name, adds user to league
+    Adds a new fantasy league
+    `new_fantasy_league_name` - name of the fantasy league
     """
 
     insert_statement = """
@@ -33,15 +33,33 @@ def create_fantasy_league(new_fantasy_league_name: str):
 
 
 @router.get("/fantasy_leagues/", tags=["fantasy_leagues"])
-def list_fantasy_leagues():
+def list_fantasy_leagues(
+    fantasy_league_name: str = "",
+    limit: int = Query(50, ge=1, le=250),
+    offset: int = Query(0, ge=0),
+):
     """
     lists the fantasy leagues from the table
+    `fantasy_league_name` - show leagues whose league name matches the given string
+    `limit`  - how many leagues to show
+    `offset` - how many leagues to skip over
     """
 
-    sql = """select * from fantasy_leagues"""
+    sql = """
+    SELECT * 
+    FROM fantasy_leagues
+    WHERE (:fantasy_league_name = '' OR fantasy_league_name LIKE '%' || :fantasy_league_name || '%')
+    OFFSET (:offset)
+    LIMIT (:limit)
+    """
+    params = {
+          'fantasy_league_name': fantasy_league_name,
+          'limit': limit,
+          'offset': offset
+        }
     
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql))
+        result = conn.execute(sqlalchemy.text(sql),params)
         res_json = []
         for row in result:
             res_json.append({
@@ -82,34 +100,3 @@ def get_top_teams_in_fantasy_league(id: int):
             })
     
     return res_json
-
-
-    
-#this one doesnt work yet
-@router.get("/fantasy_leagues/leaderboard", tags=["fantasy_leagues"])
-def get_top_fantasy_leagues():
-    """
-    lists fantasy leagues by score of the highest scoring team in the league.
-    """
-
-    sql = """SELECT fantasy_teams.fantasy_league_id, 
-                    fantasy_teams.fantasy_team_id, 
-                    SUM(games.num_goals*5 + games.num_assists*3 + games.num_passes*0.05 + games.num_shots_on_goal*0.2 - games.num_turnovers*0.2) AS total_points
-            FROM fantasy_teams
-            JOIN player_fantasy_team ON fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
-            JOIN games ON player_fantasy_team.player_id = games.player_id
-            GROUP BY fantasy_teams.fantasy_league_id, fantasy_teams.fantasy_team_id
-            ORDER BY total_points DESC"""
-    
-    with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql))
-        res_json = []
-        for row in result:
-            res_json.append({
-                "fantasy_league_id": row.fantasy_league_id,
-                "fantasy_team_id": row.fantasy_team_id,
-                "total_points": row.total_points,
-            })
-        return res_json
-
-
