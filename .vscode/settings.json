@@ -1,0 +1,9 @@
+{
+    "workbench.editor.decorations.badges": true,
+    "editor.colorDecorators": true,
+    "workbench.editor.decorations.colors": true,
+    "explorer.decorations.colors": true,
+    "explorer.decorations.badges": true,
+    "git.decorations.enabled": true,
+    "workbench.editor.limit.value": 1
+}
