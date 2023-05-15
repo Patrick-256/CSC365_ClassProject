@@ -5,8 +5,6 @@ class User:
     user_id: int
     user_name: str
     is_admin: bool
-    # fantasy_team_id: int
-    # fantast_league_id: int
     
 @pydantic.dataclasses.dataclass
 class Player:
