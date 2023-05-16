@@ -18,7 +18,8 @@ router = APIRouter()
 @router.post("/fantasy_teams/", tags=["fantasy_teams"])
 def create_fantasy_team(team: datatypes.Fantasy_Team):
     """Adds a new fantasy team with the
-       specified user id
+       specified name and user id. If no league id is provided,
+       the league id will be set to null
        """
     
     with db.engine.begin() as conn:
@@ -155,7 +156,7 @@ def get_fantasy_team_score(fantasy_team_id: int):
 def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
     This endpoint adds a user to a fantasy league
-    It sets the league_id column of a team
+    It updates the league_id column of a team
     """
 
     with db.engine.begin() as conn:

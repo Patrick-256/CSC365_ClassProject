@@ -26,6 +26,7 @@ fantasy_teams = sqlalchemy.Table("fantasy_teams", metadata_obj, autoload_with=en
 players = sqlalchemy.Table("players", metadata_obj, autoload_with=engine)
 games = sqlalchemy.Table("games", metadata_obj, autoload_with=engine)
 player_fantasy_team = sqlalchemy.Table("player_fantasy_team", metadata_obj, autoload_with=engine)
+positions = sqlalchemy.Table("positions", metadata_obj, autoload_with=engine)
 
 
 
@@ -36,5 +37,6 @@ db = {
     "fantasy_teams":fantasy_teams,
     "players": players,
     "games": games,
-    "player_fantasy_team":player_fantasy_team
+    "player_fantasy_team":player_fantasy_team,
+    "positions":positions
 }

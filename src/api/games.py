@@ -17,7 +17,15 @@ router = APIRouter()
 
 @router.post("/games/", tags=["games"])
 def add_game(game: datatypes.Game):
-    """"""
+    """
+    Adds a new game to the games table with the following specified information:
+    the id of the player
+    number of total goals
+    number of total assists
+    number of total shots on goal
+    number of total passes
+    number of total turnovers
+    """
 
     if game.num_goals < 0 or game.num_goals is None:
           game.num_goals = 0
@@ -78,7 +86,14 @@ def add_game(game: datatypes.Game):
 
 @router.get("/games/{game_id}", tags=["games"])
 def get_game_info(game_id: int):
-    """returns information about the specified game
+    """returns the following information about the specified game:
+    the id of the game
+    the id of the player
+    number of total goals
+    number of total assists
+    number of total shots on goal
+    number of total passes
+    number of total turnovers
     """
 
     with db.engine.connect() as conn:

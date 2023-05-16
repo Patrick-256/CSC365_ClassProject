@@ -6,8 +6,6 @@ from src import database as db
 import sqlalchemy
 from src.api import datatypes
 from sqlalchemy import func
-from sqlalchemy import select
-
 
 router = APIRouter()
 
@@ -25,9 +23,9 @@ def add_user(new_user: datatypes.User):
     params = {'user_name':new_user.user_name,'is_admin':new_user.is_admin}
 
     with db.engine.begin() as conn:
-        new_user_id = conn.execute(sqlalchemy.text(insert_statement),params)
+        new_user_id = conn.execute(sqlalchemy.text(insert_statement),params).scalar_one()
 
-    return {"Added user {} to the database!".format(new_user_id.user_id)}
+    return {"Added user {} to the database!".format(new_user_id)}
 
 
 
@@ -58,7 +56,11 @@ def list_users(
         }
     
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(users_query),params)
+        result = conn.execute(sqlalchemy.text(users_query),params).fetchall()
+
+        if result is None:
+            raise HTTPException(422, "No users found.")
+        
         res_json = []
         for row in result:
             res_json.append({

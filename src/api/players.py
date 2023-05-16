@@ -18,9 +18,9 @@ router = APIRouter()
 def add_player(name: str, irl_team_name: str, position: str):
     """
     This endpoint adds a player to the database
-    * `player_id`: the internal id of the player. 
-    * `player_name`:
-    * `player_position`:
+    * `player_name`: the name of the player
+    * `player_position`: the position of the player
+    * `irl_team_name`: the real life team of the player
     """
 
     with db.engine.begin() as conn:
@@ -50,10 +50,9 @@ def add_player(name: str, irl_team_name: str, position: str):
 @router.put("/players/{id}/info", tags=["players"])
 def edit_player(id: int, position: str, irl_team_name: str):
     """
-    This endpoint edits player statistics in the database
-    * `player_id`: the internal id of the player. 
-    * `irl_team_name`:
-    * `player_position`:
+    This endpoint edits the follwoing player information of the specified player
+    * `irl_team_name`: the real life team of the player
+    * `player_position`: the position of the player
     """
 
     with db.engine.begin() as conn:
@@ -107,9 +106,14 @@ def get_player(id: int):
     it returns:
     * `player_id`: the internal id of the character. Can be used to query the
       `/characters/{character_id}` endpoint.
-    * `player_name`:
-    * `player_position`
-    * game stats
+    * `player_name`: the name of the player
+    * `player_position`: the position of the player
+    * the following game stats (if the player has played in at least one game):
+        number of total goals
+        number of total assists
+        number of total shots on goal
+        number of total passes
+        number of total turnovers
     """
 
     with db.engine.connect() as conn:
@@ -198,6 +202,7 @@ class player_sort_options(str, Enum):
 def get_players(sort: player_sort_options = player_sort_options.goals,
                 limit: int = Query(50, ge=1, le=250)):
     """
+    list players in order of the specified sort up to the limit
     """
 
     with db.engine.connect() as conn:
