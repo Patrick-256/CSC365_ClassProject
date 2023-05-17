@@ -12,10 +12,9 @@ router = APIRouter()
 
 
 @router.post("/fantasy_leagues/", tags=["fantasy_leagues"])
-def create_fantasy_league(new_fantasy_league_name: str):
+def create_fantasy_league(new_fantasy_league: datatypes.fantasy_league):
     """
-    Adds a new fantasy league
-    `new_fantasy_league_name` - name of the fantasy league
+    Adds a new fantasy league with a specified name
     """
 
     insert_statement = """
@@ -24,7 +23,7 @@ def create_fantasy_league(new_fantasy_league_name: str):
     returning fantasy_league_id
     """
 
-    params = {'new_name':new_fantasy_league_name}
+    params = {'new_name':new_fantasy_league.fantasy_league_name}
 
     with db.engine.begin() as conn:
         try:
@@ -86,7 +85,7 @@ def get_top_teams_in_fantasy_league(id: int):
     total_points = num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2
     """
 
-    
+
     sql = """SELECT 
                 fantasy_teams.fantasy_team_id,
                 SUM(games.num_goals * 5 + games.num_assists * 3 + games.num_passes * 0.05 + games.num_shots_on_goal * 0.2 - games.num_turnovers * 0.2) AS total_points

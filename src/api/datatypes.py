@@ -2,9 +2,9 @@ import pydantic.dataclasses
 
 @pydantic.dataclasses.dataclass
 class User:
-    # user_id: int 
     user_name: str
     is_admin: bool
+    password: str
     
 @pydantic.dataclasses.dataclass
 class Player:
@@ -38,4 +38,8 @@ class Game:
     num_passes: int
     num_shots_on_goal: int
     num_turnovers: int
+
+@pydantic.dataclasses.dataclass
+class fantasy_league:
+    fantasy_league_name: str
 

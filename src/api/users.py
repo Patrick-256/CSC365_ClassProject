@@ -6,6 +6,7 @@ from src import database as db
 import sqlalchemy
 from src.api import datatypes
 from sqlalchemy import func
+import hashlib
 
 router = APIRouter()
 
@@ -17,11 +18,14 @@ def add_user(new_user: datatypes.User):
     """
 
     insert_statement = """
-    INSERT INTO users (user_name, is_admin)
-    VALUES ((:user_name), (:is_admin))
+    INSERT INTO users (user_name, is_admin, password)
+    VALUES ((:user_name), (:is_admin), (:password))
     returning user_id
     """
-    params = {'user_name':new_user.user_name,'is_admin':new_user.is_admin}
+    params = {'user_name':new_user.user_name,
+              'is_admin':new_user.is_admin,
+              'password': hash_password(new_user.password)
+              }
 
     with db.engine.begin() as conn:
         try:
@@ -78,5 +82,47 @@ def list_users(user_name: str = "",
             raise HTTPException(422, error_msg)
         
         return res_json
+    
 
+@router.get("/users/login",tags=["users"])
+def login(username: str, password: str):
+    """
+    authorizes a user by username and password
+    """
+
+    sql = """
+        select password
+        from users
+        where user_name = (:username)
+    """
+
+    with db.engine.connect() as conn:
+
+        user_subq = """
+            select user_name from users
+            where user_name = (:username)
+            """
+        
+        user_result = conn.execute(sqlalchemy.text(user_subq),{"username":username}).fetchone()
+
+        if user_result is None:
+            raise HTTPException(422, "User not found.")
+
+        pwd = conn.execute(sqlalchemy.text(sql), {'username': username}).scalar_one()
+
+    if hash_password(password) == pwd:
+
+        return {"Login successful."}
+    
+    return {"Login failed."}
+
+
+def hash_password(pwd: str):
+    hash_object = hashlib.sha256()
+
+    hash_object.update(pwd.encode('utf-8'))
+
+    hashed_password = hash_object.hexdigest()
+
+    return hashed_password
 

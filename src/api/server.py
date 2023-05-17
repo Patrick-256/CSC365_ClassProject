@@ -9,6 +9,7 @@ Fantasy Soccer API allows users to simulate a fantasy soccer league.
 You can:
 * **Add a new user by providing the user_name and is_admin options.**
 * **List existing users**
+* **Log in
 
 
 ## players
@@ -52,7 +53,7 @@ You can:
 tags_metadata = [
     {
         "name": "users",
-        "description": "Access information or add users.",
+        "description": "Log in, access information or add users.",
     },
     {
         "name": "friends",
