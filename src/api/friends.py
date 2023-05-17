@@ -73,11 +73,9 @@ def add_friend(new_friendship: datatypes.Friend):
 
 
 @router.get("/friends/",tags=["friends"])
-def list_friends(
-    user_id: Optional[int] = Query(None),
-    limit: int = Query(50, ge=1, le=250),
-    offset: int = Query(0, ge=0),
-):
+def list_friends(user_id: Optional[int] = Query(None),
+                 limit: int = Query(50, ge=1, le=250),
+                 offset: int = Query(0, ge=0)):
     """
     Lists out existing friendships between user ids.
     `user_id` - show the friendships this user_id is a part of.

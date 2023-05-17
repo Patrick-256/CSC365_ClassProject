@@ -8,7 +8,45 @@ Fantasy Soccer API allows users to simulate a fantasy soccer league.
 
 You can:
 * **Add a new user by providing the user_name and is_admin options.**
-* **list existing users**
+* **List existing users**
+
+
+## players
+
+You can:
+* **Edit or add a new player by providing the player name, position, and team.**
+* **List existing players**
+
+
+## fantasy_teams
+
+You can:
+* **Add a new team by providing the name and (optional)fantasy league.**
+* **Add/remove a player to/from a team**
+* **Get the team score
+* **Add a team to a league
+
+
+## games
+
+You can:
+* **Add a new game by providing the game_id, player_id, and game statistics.**
+* **List existing game stats**
+
+
+## friends
+
+You can:
+* **Create a new friendship between two users.**
+* **List existing friendships**
+
+
+## fantasy_leagues
+
+You can:
+* **Create a new league by providing the league name.**
+* **List existing leagues**
+* **List the top teams by score in a league
 
 """
 tags_metadata = [
@@ -43,8 +81,8 @@ app = FastAPI(
     description=description,
     version="0.0.1",
     contact={
-        "name": "Patrick Whitlock and Ashton Alonge",
-        "email": "pwhitloc@calpoly.edu and aalonge@calpoly.edu",
+        "name": "Patrick Whitlock & Ashton Alonge",
+        "email": "pwhitloc@calpoly.edu & aalonge@calpoly.edu",
     },
     openapi_tags=tags_metadata,
 )

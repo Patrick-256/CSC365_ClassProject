@@ -86,7 +86,8 @@ def add_game(game: datatypes.Game):
 
 @router.get("/games/{game_id}", tags=["games"])
 def get_game_info(game_id: int):
-    """returns the following information about the specified game:
+    """
+    returns the following information about the specified game:
     the id of the game
     the id of the player
     number of total goals

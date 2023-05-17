@@ -35,11 +35,9 @@ def add_user(new_user: datatypes.User):
 
 
 @router.get("/users/",tags=["users"])
-def list_users(
-    user_name: str = "",
-    limit: int = Query(50, ge=1, le=250),
-    offset: int = Query(0, ge=0),
-):
+def list_users(user_name: str = "",
+               limit: int = Query(50, ge=1, le=250),
+               offset: int = Query(0, ge=0)):
     """
     Lists users from the database
     `user_name` - show users whose user_name matches the given string

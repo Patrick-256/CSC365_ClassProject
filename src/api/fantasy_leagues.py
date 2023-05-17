@@ -38,11 +38,9 @@ def create_fantasy_league(new_fantasy_league_name: str):
 
 
 @router.get("/fantasy_leagues/", tags=["fantasy_leagues"])
-def list_fantasy_leagues(
-    fantasy_league_name: str = "",
-    limit: int = Query(50, ge=1, le=250),
-    offset: int = Query(0, ge=0),
-):
+def list_fantasy_leagues(fantasy_league_name: str = "",
+                         limit: int = Query(50, ge=1, le=250),
+                         offset: int = Query(0, ge=0)):
     """
     lists the fantasy leagues from the table
     `fantasy_league_name` - show leagues whose league name matches the given string
@@ -87,6 +85,8 @@ def get_top_teams_in_fantasy_league(id: int):
     Total points is calculated based on the following formula:
     total_points = num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2
     """
+
+    
     sql = """SELECT 
                 fantasy_teams.fantasy_team_id,
                 SUM(games.num_goals * 5 + games.num_assists * 3 + games.num_passes * 0.05 + games.num_shots_on_goal * 0.2 - games.num_turnovers * 0.2) AS total_points
