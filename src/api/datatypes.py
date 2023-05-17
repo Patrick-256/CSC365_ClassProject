@@ -2,7 +2,7 @@ import pydantic.dataclasses
 
 @pydantic.dataclasses.dataclass
 class User:
-    user_id: int
+    # user_id: int 
     user_name: str
     is_admin: bool
     

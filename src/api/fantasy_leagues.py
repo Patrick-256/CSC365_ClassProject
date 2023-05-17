@@ -21,18 +21,19 @@ def create_fantasy_league(new_fantasy_league_name: str):
     insert_statement = """
     INSERT INTO fantasy_leagues (fantasy_league_name)
     VALUES ((:new_name))
+    returning fantasy_league_id
     """
 
     params = {'new_name':new_fantasy_league_name}
 
     with db.engine.begin() as conn:
         try:
-            new_league_id = conn.execute(sqlalchemy.text(insert_statement),params)
+            new_league_id = conn.execute(sqlalchemy.text(insert_statement),params).scalar_one()
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
         
-    return {"Added fantasy league {} to the database!".format(new_league_id.fantasy_league_id)}
+    return {"Added fantasy league id {} to the database!".format(new_league_id)}
 
 
 

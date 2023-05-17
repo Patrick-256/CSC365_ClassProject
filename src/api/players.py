@@ -18,9 +18,9 @@ router = APIRouter()
 def add_player(name: str, irl_team_name: str, position: str):
     """
     This endpoint adds a player to the database
-    * `player_id`: the internal id of the player. 
-    * `player_name`:
-    * `player_position`:
+    * `player_name`: the name of the player
+    * `player_position`: the position of the player
+    * `irl_team_name`: the real life team of the player
     """
 
     with db.engine.begin() as conn:
@@ -50,14 +50,22 @@ def add_player(name: str, irl_team_name: str, position: str):
 @router.put("/players/{id}/info", tags=["players"])
 def edit_player(id: int, position: str, irl_team_name: str):
     """
-    This endpoint edits player statistics in the database
-    * `player_id`: the internal id of the player. 
-    * `irl_team_name`:
-    * `player_position`:
+    This endpoint edits the follwoing player information of the specified player
+    * `irl_team_name`: the real life team of the player
+    * `player_position`: the position of the player
     """
 
     with db.engine.begin() as conn:
 
+        player_subq = """
+            select player_id from players
+            where player_id = (:player_id)
+            """
+        
+        player_result = conn.execute(sqlalchemy.text(player_subq),{"player_id":id}).fetchone()
+
+        if player_result is None:
+            raise HTTPException(422, "Player not found.")
       
         current_player = """
             select * from players
@@ -98,42 +106,75 @@ def get_player(id: int):
     it returns:
     * `player_id`: the internal id of the character. Can be used to query the
       `/characters/{character_id}` endpoint.
-    * `player_name`:
-    * `player_position`
-    * game stats
+    * `player_name`: the name of the player
+    * `player_position`: the position of the player
+    * the following game stats (if the player has played in at least one game):
+        number of total goals
+        number of total assists
+        number of total shots on goal
+        number of total passes
+        number of total turnovers
     """
 
     with db.engine.connect() as conn:
 
+        game_subq = """
+            select player_id from games
+            where player_id = (:player_id)
+            """
+        
+        player_in_game_result = conn.execute(sqlalchemy.text(game_subq),{"player_id":id}).fetchone()
 
-        sql = """
-              SELECT
-            players.player_id, 
-            players.player_name, 
-            players.player_position,
-            players.irl_team_name,
-            SUM(games.num_goals) AS total_num_goals,
-            SUM(games.num_assists) AS total_num_assists,
-            SUM(games.num_passes) AS total_num_passes,
-            SUM(games.num_shots_on_goal) AS total_num_shots_on_goal,
-            SUM(games.num_turnovers) AS total_num_turnovers
-            FROM
-                players
-            JOIN games ON games.player_id = players.player_id
-            WHERE
-                players.player_id = :id
-            GROUP BY
+        if player_in_game_result is not None:
+
+            sql = """
+                SELECT
                 players.player_id, 
                 players.player_name, 
                 players.player_position,
-                players.irl_team_name;
+                players.irl_team_name,
+                SUM(games.num_goals) AS total_num_goals,
+                SUM(games.num_assists) AS total_num_assists,
+                SUM(games.num_passes) AS total_num_passes,
+                SUM(games.num_shots_on_goal) AS total_num_shots_on_goal,
+                SUM(games.num_turnovers) AS total_num_turnovers
+                FROM
+                    players
+                JOIN games ON games.player_id = players.player_id
+                WHERE
+                    players.player_id = (:id)
+                GROUP BY
+                    players.player_id, 
+                    players.player_name, 
+                    players.player_position,
+                    players.irl_team_name;
 
-        """
-        try:
+            """
             result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
-        except sqlalchemy.exc.IntegrityError as e:
-            error_msg = e.orig.diag.message_detail
-            raise HTTPException(422, error_msg)
+
+            if result is None:
+                raise HTTPException(422, "Player not found.")
+        
+        else: 
+
+            p = """
+                SELECT
+                players.player_id, 
+                players.player_name, 
+                players.player_position,
+                players.irl_team_name
+                from players
+                where player_id = (:player_id)
+                """
+            p_result = conn.execute(sqlalchemy.text(p),{"player_id":id}).fetchone()
+
+            return {
+                "player_id": p_result.player_id,
+                "player_name": p_result.player_name,
+                "player_position": p_result.player_position,
+                "irl_team_name": p_result.irl_team_name
+            }
+
 
     return {
         "player_id": result.player_id,
@@ -161,6 +202,7 @@ class player_sort_options(str, Enum):
 def get_players(sort: player_sort_options = player_sort_options.goals,
                 limit: int = Query(50, ge=1, le=250)):
     """
+    list players in order of the specified sort up to the limit
     """
 
     with db.engine.connect() as conn:
