@@ -25,8 +25,12 @@ def add_user(new_user: datatypes.User):
     params = {'user_name':new_user.user_name,'is_admin':new_user.is_admin}
 
     with db.engine.begin() as conn:
-        new_user_id = conn.execute(sqlalchemy.text(insert_statement),params)
-
+        try:
+            new_user_id = conn.execute(sqlalchemy.text(insert_statement),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
+        
     return {"Added user {} to the database!".format(new_user_id.user_id)}
 
 
@@ -58,15 +62,21 @@ def list_users(
         }
     
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(users_query),params)
         res_json = []
-        for row in result:
-            res_json.append({
-                "user_id":row.user_id,
-                "user_name":row.user_name,
-                "is_admin":row.is_admin,
-                "created_at":row.created_at,
-            })
+        try:
+            result = conn.execute(sqlalchemy.text(users_query),params)
+            
+            for row in result:
+                res_json.append({
+                    "user_id":row.user_id,
+                    "user_name":row.user_name,
+                    "is_admin":row.is_admin,
+                    "created_at":row.created_at,
+                })
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
+        
         return res_json
 
 

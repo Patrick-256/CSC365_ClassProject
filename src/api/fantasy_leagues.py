@@ -26,8 +26,12 @@ def create_fantasy_league(new_fantasy_league_name: str):
     params = {'new_name':new_fantasy_league_name}
 
     with db.engine.begin() as conn:
-        new_league_id = conn.execute(sqlalchemy.text(insert_statement),params)
-
+        try:
+            new_league_id = conn.execute(sqlalchemy.text(insert_statement),params)
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
+        
     return {"Added fantasy league {} to the database!".format(new_league_id.fantasy_league_id)}
 
 
@@ -59,14 +63,18 @@ def list_fantasy_leagues(
         }
     
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql),params)
-        res_json = []
-        for row in result:
-            res_json.append({
-                "fantasy_league_id":row.fantasy_league_id,
-                "fantasy_league_name":row.fantasy_league_name,
-                "created_at":row.created_at,
-            })
+        try:
+            result = conn.execute(sqlalchemy.text(sql),params)
+            res_json = []
+            for row in result:
+                res_json.append({
+                    "fantasy_league_id":row.fantasy_league_id,
+                    "fantasy_league_name":row.fantasy_league_name,
+                    "created_at":row.created_at,
+                })
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
     
     return res_json
 
@@ -91,12 +99,16 @@ def get_top_teams_in_fantasy_league(id: int):
     params = {'id': id}
 
     with db.engine.connect() as conn:
-        result = conn.execute(sqlalchemy.text(sql), params)
-        res_json = []
-        for row in result:
-            res_json.append({
-                "fantasy_team_id": row.fantasy_team_id,
-                "total_points": row.total_points,
-            })
+        try:
+            result = conn.execute(sqlalchemy.text(sql), params)
+            res_json = []
+            for row in result:
+                res_json.append({
+                    "fantasy_team_id": row.fantasy_team_id,
+                    "total_points": row.total_points,
+                })
+        except sqlalchemy.exc.IntegrityError as e:
+            error_msg = e.orig.diag.message_detail
+            raise HTTPException(422, error_msg)
     
     return res_json
