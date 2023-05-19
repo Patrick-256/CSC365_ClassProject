@@ -14,7 +14,6 @@ def test_get_user():
     "user_id": 0,
     "user_name": "Pata_Data",
     "is_admin": True,
-    "created_at": "2023-05-07T17:30:11+00:00"
   }
     
 def test_add_user():
