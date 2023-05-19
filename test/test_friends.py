@@ -3,6 +3,9 @@ from fastapi.testclient import TestClient
 from src.api.server import app
 
 import json
+import src.database as db
+import sqlalchemy
+
 
 client = TestClient(app)
 
@@ -18,8 +21,19 @@ def test_get_friends():
     
 def test_add_friend():
     test_friendship = { #this wont work in future versions when we verify the users exist
-        "user1_id": 9999,
-        "user2_id": 9998
+        "user1_id": 44,
+        "user2_id": 45
     }
     response = client.post("/friends/", json=test_friendship)
     assert response.status_code == 200
+
+    #clean up
+    with db.engine.begin() as conn:
+
+        sql = """
+            DELETE FROM friends
+            WHERE user1_id = 44 and user2_id = 45
+            """
+        conn.execute(sqlalchemy.text(sql))
+
+    
