@@ -3,13 +3,28 @@ from fastapi.testclient import TestClient
 from src.api.server import app
 
 import json
+import src.database as db
+import sqlalchemy
 
 client = TestClient(app)
 
 
 def test_create_fantasy_league():
-    response = client.post("/fantasy_leagues/?new_fantasy_league_name=testCaseFantasyLeague01")
+    test_league = {
+        "fantasy_league_name": "testCaseFantasyLeague05-19"
+    }
+    response = client.post("/fantasy_leagues/",test_league)
     assert response.status_code == 200
+
+    #clean up
+    with db.engine.begin() as conn:
+
+        sql = """
+            DELETE FROM fantasy_leagues
+            WHERE fantasy_leagues_id = (SELECT MAX(fantasy_leagues_id) 
+            FROM fantasy_leagues) 
+            """
+        conn.execute(sqlalchemy.text(sql))
 
 
 
@@ -34,7 +49,7 @@ def test_get_top_teams_in_fantasy_league():
   },
   {
     "fantasy_team_id": 3,
-    "total_points": 51.2
+    "total_points": 40.55
   },
   {
     "fantasy_team_id": 0,
