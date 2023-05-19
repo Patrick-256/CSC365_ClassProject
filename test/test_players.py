@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 from src.api.server import app
 
 import json
+import src.database as db
+import sqlalchemy
 
 client = TestClient(app)
 
@@ -34,10 +36,44 @@ def test_get_players():
 
 
 def test_edit_player():
-    response = client.put("/players/1/info?position=ST&irl_team_name=Manchester City")
+
+    with db.engine.begin() as conn:
+
+        prev_subq = """
+            select player_position, irl_team_name
+            from players
+            where player_id = 1
+        """
+
+        prev = conn.execute(sqlalchemy.text(prev_subq)).fetchone()
+
+
+    response = client.put("/players/1/info?position=LW&irl_team_name=Manchester City")
     assert response.status_code == 200
+
+    #clean up
+    with db.engine.begin() as conn:
+
+        sql = """
+            update players
+            set player_position = (:prev_pos), 
+                irl_team_name = (:prev_team)
+            where player_id = 1
+            """
+        conn.execute(sqlalchemy.text(sql),{'prev_pos':prev.player_position, 'prev_team': prev.irl_team_name})
 
 
 def test_add_player():
     response = client.post("/players/?name=Johnny&irl_team_name=Arsenal&position=GK")
     assert response.status_code == 200
+
+    #clean up
+    with db.engine.begin() as conn:
+
+        sql = """
+            DELETE FROM players
+            WHERE player_id = (SELECT MAX(player_id) 
+            FROM players) 
+            """
+        conn.execute(sqlalchemy.text(sql))
+    
