@@ -12,12 +12,14 @@ class Player:
     player_name: str
     player_position: str
     irl_team_name: str
+    player_value: int
 
 @pydantic.dataclasses.dataclass
 class Fantasy_Team:
     fantasy_team_name: str
     user_id: int
     fantasy_league_id: int
+    fantasy_team_balance: int
 
 @pydantic.dataclasses.dataclass
 class Friend:
@@ -42,4 +44,5 @@ class Game:
 @pydantic.dataclasses.dataclass
 class fantasy_league:
     fantasy_league_name: str
+    fantasy_league_budget: int
 
