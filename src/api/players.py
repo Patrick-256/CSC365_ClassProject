@@ -196,6 +196,7 @@ class player_sort_options(str, Enum):
     shots = "num_shots"
     shots_on_goal = "num_shots_on_goal"
     games_played = "num_games_played"
+    turnovers = "num_turnovers"
 
 
 @router.get("/players/", tags=["players"])
