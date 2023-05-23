@@ -182,6 +182,18 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
 
     with db.engine.begin() as conn:
+        league_budget_subq = """
+                select fantasy_league_budget
+                from fantasy_leagues
+                where fantasy_leagues.fantasy_league_id = (:league_id)
+                for share
+                """
+        team_value_subq = """
+                select fantasy_team_balance
+                from fantasy_teams
+                where fantasy_teams.fantasy_team_id = (:team_id)
+                for share
+                """
 
         team_subq = """
             select fantasy_team_id from fantasy_teams
@@ -203,6 +215,10 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
             
 
         try:
+            league_budget = conn.execute(sqlalchemy.text(league_budget_subq),{'league_id':league_id})
+            team_value = conn.execute(sqlalchemy.text(team_value_subq),{'team_id':team_id})
+            if(team_value <= league_budget):
+                raise HTTPException(422, "Team value is too high for this league.")
             conn.execute(sqlalchemy.text(sql),params)
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
