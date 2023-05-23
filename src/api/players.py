@@ -15,27 +15,32 @@ router = APIRouter()
 
 
 @router.post("/players/", tags=["players"])
-def add_player(name: str, irl_team_name: str, position: str):
+def add_player(name: str, irl_team_name: str, position: str, value: int):
     """
     This endpoint adds a player to the database
     * `player_name`: the name of the player
     * `player_position`: the position of the player
     * `irl_team_name`: the real life team of the player
+    * 'player_value': the value of the player
     """
 
+    if(value <= 0):
+        raise HTTPException(422, "Value must be greater than $0")
+    
     with db.engine.begin() as conn:
 
         
         sql = """
-            INSERT INTO players (player_name, player_position, irl_team_name)
-            VALUES ((:name), (:position), (:irl_team_name))
+            INSERT INTO players (player_name, player_position, irl_team_name, player_value)
+            VALUES ((:name), (:position), (:irl_team_name), (:value))
             returning player_id
         """
 
         params = {
             'name':name,
             'position': position,
-            'irl_team_name': irl_team_name
+            'irl_team_name': irl_team_name,
+            'value': value
         }
         try:
             new_player_id = conn.execute(sqlalchemy.text(sql),params).scalar_one()
@@ -48,12 +53,16 @@ def add_player(name: str, irl_team_name: str, position: str):
 
     
 @router.put("/players/{id}/info", tags=["players"])
-def edit_player(id: int, position: str, irl_team_name: str):
+def edit_player(id: int, position: str, irl_team_name: str, value: int):
     """
     This endpoint edits the follwoing player information of the specified player
     * `irl_team_name`: the real life team of the player
     * `player_position`: the position of the player
+    * 'player_value': the value of the player
+
     """
+    if(value <= 0):
+        raise HTTPException(422, "Value must be greater than $0")
 
     with db.engine.begin() as conn:
 
@@ -81,14 +90,16 @@ def edit_player(id: int, position: str, irl_team_name: str):
         sql = """
             update players
             set irl_team_name = (:irl_team_name),
-                player_position = (:position)
+                player_position = (:position),
+                player_value = (:value)
             where player_id = (:id)
         """
 
         params = {
           'irl_team_name': irl_team_name,
           'position': position,
-          'id': id
+          'id': id,
+          'value': value
          }
         try:
             conn.execute(sqlalchemy.text(sql),params)
@@ -108,12 +119,14 @@ def get_player(id: int):
       `/characters/{character_id}` endpoint.
     * `player_name`: the name of the player
     * `player_position`: the position of the player
+    * 'player_value': the value of the player
     * the following game stats (if the player has played in at least one game):
         number of total goals
         number of total assists
         number of total shots on goal
         number of total passes
         number of total turnovers
+
     """
 
     with db.engine.connect() as conn:
@@ -133,6 +146,7 @@ def get_player(id: int):
                 players.player_name, 
                 players.player_position,
                 players.irl_team_name,
+                players.player_value,
                 SUM(games.num_goals) AS total_num_goals,
                 SUM(games.num_assists) AS total_num_assists,
                 SUM(games.num_passes) AS total_num_passes,
@@ -147,7 +161,8 @@ def get_player(id: int):
                     players.player_id, 
                     players.player_name, 
                     players.player_position,
-                    players.irl_team_name;
+                    players.irl_team_name,
+                    players.player_value
 
             """
             result = conn.execute(sqlalchemy.text(sql), {'id':id}).fetchone()
@@ -162,7 +177,8 @@ def get_player(id: int):
                 players.player_id, 
                 players.player_name, 
                 players.player_position,
-                players.irl_team_name
+                players.irl_team_name,
+                players.player_value
                 from players
                 where player_id = (:player_id)
                 """
@@ -172,7 +188,8 @@ def get_player(id: int):
                 "player_id": p_result.player_id,
                 "player_name": p_result.player_name,
                 "player_position": p_result.player_position,
-                "irl_team_name": p_result.irl_team_name
+                "irl_team_name": p_result.irl_team_name,
+                "player_value": p_result.player_value
             }
 
 
@@ -181,6 +198,7 @@ def get_player(id: int):
         "player_name": result.player_name,
         "player_position": result.player_position,
         "irl_team_name": result.irl_team_name,
+        "player_value": result.player_value,
         "total_num_goals": result.total_num_goals,
         "total_num_assists": result.total_num_assists,
         "total_num_passes": result.total_num_passes,
@@ -197,6 +215,7 @@ class player_sort_options(str, Enum):
     shots_on_goal = "num_shots_on_goal"
     games_played = "num_games_played"
     turnovers = "num_turnovers"
+    value = "player_value"
 
 
 @router.get("/players/", tags=["players"])
@@ -214,6 +233,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
             players.player_name, 
             players.player_position,
             players.irl_team_name,
+            players.player_value,
             SUM(games.num_goals) AS num_goals,
             SUM(games.num_assists) AS num_assists,
             SUM(games.num_passes) AS num_passes,
@@ -226,7 +246,8 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
                 players.player_id, 
                 players.player_name, 
                 players.player_position,
-                players.irl_team_name
+                players.irl_team_name,
+                players.player_value
             ORDER BY {} desc
             limit (:limit)
             """.format(sort.value)
@@ -245,6 +266,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
         "player_name": row.player_name,
         "player_position": row.player_position,
         "irl_team_name": row.irl_team_name,
+        "player_value": row.player_value,
         "total_num_goals": row.num_goals,
         "total_num_assists": row.num_assists,
         "total_num_passes": row.num_passes,

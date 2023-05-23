@@ -35,8 +35,8 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
             team.fantasy_league_id = None
 
         sql = """
-            INSERT INTO fantasy_teams (fantasy_team_name, user_id)
-            VALUES ((:name),(:user_id))
+            INSERT INTO fantasy_teams (fantasy_team_name, user_id, fantasy_league_id, fantasy_team_balance)
+            VALUES ((:name),(:user_id), (:fantasy_league_id), 10000000)
             returning fantasy_team_id"""
         
         params = {
@@ -62,15 +62,32 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
     """
 
     with db.engine.begin() as conn:
-
     
+        bal_subq = """
+                select fantasy_team_balance
+                from fantasy_teams
+                where fantasy_teams.fantasy_team_id = (:id)
+                for share
+                """
+        val_subq = """
+                select player_value
+                from players
+                where players.player_id = (:p_id)
+                for share
+                """
+        
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
             VALUES ((:player_id),(:fantasy_team_id))
             """
         
         params = {'player_id':player_team.player_id, 'fantasy_team_id':player_team.fantasy_team_id}
+
         try:
+            balance = conn.execute(sqlalchemy.text(bal_subq),{'id':player_team.fantasy_team_id}).scalar_one()
+            value = conn.execute(sqlalchemy.text(val_subq),{'p_id':player_team.player_id}).scalar_one()
+            if balance < value:
+                raise HTTPException(422, "Team balance is too low.")
             conn.execute(sqlalchemy.text(sql),params)
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail

@@ -27,7 +27,7 @@ def test_create_team():
         "fantasy_team_name": "The Best Team",
         "user_id": 1,
         "fantasy_league_id": 0
-        }
+       }
     response = client.post("/fantasy_teams/", headers=headers, data=json.dumps(data))
     assert response.status_code == 200
 
