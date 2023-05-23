@@ -15,7 +15,12 @@ router = APIRouter()
 def create_fantasy_league(new_fantasy_league: datatypes.fantasy_league):
     """
     Adds a new fantasy league with a specified name
+    Minimum league budget is $1,000,000. League budget is set to this value
+    if input is less.
     """
+
+    if new_fantasy_league.fantasy_league_budget < 1000000:
+        new_fantasy_league.fantasy_league_budget = 1000000
 
     insert_statement = """
     INSERT INTO fantasy_leagues (fantasy_league_name,fantasy_league_budget)

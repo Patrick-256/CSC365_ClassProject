@@ -146,7 +146,7 @@ def get_player(id: int):
                 players.player_name, 
                 players.player_position,
                 players.irl_team_name,
-                players.player_value,
+                CONCAT('$', COALESCE(TO_CHAR(players.player_value, 'FM999,999,999,999'), 'NULL')) AS player_value,
                 SUM(games.num_goals) AS total_num_goals,
                 SUM(games.num_assists) AS total_num_assists,
                 SUM(games.num_passes) AS total_num_passes,
@@ -178,7 +178,7 @@ def get_player(id: int):
                 players.player_name, 
                 players.player_position,
                 players.irl_team_name,
-                players.player_value
+                CONCAT('$', COALESCE(TO_CHAR(players.player_value, 'FM999,999,999,999'), 'NULL')) AS player_value
                 from players
                 where player_id = (:player_id)
                 """
@@ -233,7 +233,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
             players.player_name, 
             players.player_position,
             players.irl_team_name,
-            players.player_value,
+            CONCAT('$', COALESCE(TO_CHAR(players.player_value, 'FM999,999,999,999'), 'NULL')) AS player_value,
             SUM(games.num_goals) AS num_goals,
             SUM(games.num_assists) AS num_assists,
             SUM(games.num_passes) AS num_passes,

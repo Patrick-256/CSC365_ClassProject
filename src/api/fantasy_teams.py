@@ -22,7 +22,8 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
     """
     Adds a new fantasy team with the
     specified name and user id. If no league id is provided,
-    the league id will be set to null
+    the league id will be set to null.
+    Team balance is auto set to $10,000,000
     """
     
     with db.engine.begin() as conn:
