@@ -71,7 +71,7 @@ def list_fantasy_leagues(fantasy_league_name: str = "",
                 res_json.append({
                     "fantasy_league_id":row.fantasy_league_id,
                     "fantasy_league_name":row.fantasy_league_name,
-                    "created_at":row.created_at,
+                    "fantasy_league_budget":row.fantasy_league_budget
                 })
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
