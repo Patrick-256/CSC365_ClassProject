@@ -11,7 +11,8 @@ client = TestClient(app)
 
 def test_create_fantasy_league():
     test_league = {
-        "fantasy_league_name": "testCaseFantasyLeague05-19"
+        "fantasy_league_name": "testCaseFantasyLeague05-19",
+        "fantasy_league_budget":23000000
     }
     response = client.post("/fantasy_leagues/",test_league)
     assert response.status_code == 200
@@ -35,7 +36,7 @@ def test_list_fantasy_league():
     assert response.json()[0] ==  {
     "fantasy_league_id": 1,
     "fantasy_league_name": "Cal Poly Soccer",
-    "created_at": "2023-05-09T01:45:46.363565+00:00"
+    "fantasy_league_budget": 19010000
   }
     
 def test_get_top_teams_in_fantasy_league():
