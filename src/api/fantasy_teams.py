@@ -10,6 +10,8 @@ from src.api import datatypes
 
 from sqlalchemy.exc import IntegrityError
 from psycopg2.errors import ForeignKeyViolation
+from sqlalchemy.orm.exc import NoResultFound
+
 
 
 router = APIRouter()
@@ -25,24 +27,15 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
     
     with db.engine.begin() as conn:
 
-        
-        league_subq = """
-            Select (:league) from fantasy_leagues
-        """
-        league_result = conn.execute(sqlalchemy.text(league_subq),{"league":team.fantasy_league_id})
-
-        if league_result is None:
-            team.fantasy_league_id = None
 
         sql = """
-            INSERT INTO fantasy_teams (fantasy_team_name, user_id, fantasy_league_id, fantasy_team_balance)
-            VALUES ((:name),(:user_id), (:fantasy_league_id), 10000000)
+            INSERT INTO fantasy_teams (fantasy_team_name, user_id, fantasy_team_balance)
+            VALUES ((:name),(:user_id), 10000000)
             returning fantasy_team_id"""
         
         params = {
                   'name': team.fantasy_team_name, 
                   'user_id': team.user_id,
-                  'fantasy_league_id': team.fantasy_league_id
                   }
 
         try:
@@ -62,6 +55,18 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
     """
 
     with db.engine.begin() as conn:
+
+        query = sqlalchemy.text("""
+        SELECT * 
+        FROM player_fantasy_team 
+        WHERE player_id = :player_id AND fantasy_team_id = :fantasy_team_id
+        """)
+
+        result = conn.execute(query, {"player_id": player_team.player_id, "fantasy_team_id": player_team.fantasy_team_id}).fetchone()
+
+        if result is not None:
+            error_msg = "Player is already on this team."
+            raise HTTPException(422, error_msg)
     
         bal_subq = """
                 select fantasy_team_balance
@@ -76,19 +81,32 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
                 for share
                 """
         
+        try:
+            balance = conn.execute(sqlalchemy.text(bal_subq),{'id':player_team.fantasy_team_id}).scalar_one()
+            value = conn.execute(sqlalchemy.text(val_subq),{'p_id':player_team.player_id}).scalar_one()
+        except NoResultFound as e:
+            raise HTTPException(422, "Player or fantasy team not found.")
+
+        
         sql = """
             INSERT INTO player_fantasy_team (player_id, fantasy_team_id)
             VALUES ((:player_id),(:fantasy_team_id))
             """
         
+        subtract = """
+            update fantasy_teams
+            set fantasy_team_balance = (:new_bal)
+            where fantasy_team_id = (:id)
+            """
+        
         params = {'player_id':player_team.player_id, 'fantasy_team_id':player_team.fantasy_team_id}
 
         try:
-            balance = conn.execute(sqlalchemy.text(bal_subq),{'id':player_team.fantasy_team_id}).scalar_one()
-            value = conn.execute(sqlalchemy.text(val_subq),{'p_id':player_team.player_id}).scalar_one()
             if balance < value:
                 raise HTTPException(422, "Team balance is too low.")
             conn.execute(sqlalchemy.text(sql),params)
+            conn.execute(sqlalchemy.text(subtract),{'new_bal': balance-value,
+                                                    'id': player_team.fantasy_team_id})
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
@@ -104,6 +122,44 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 
     with db.engine.begin() as conn:
 
+        query = sqlalchemy.text("""
+        SELECT * 
+        FROM player_fantasy_team 
+        WHERE player_id = :player_id AND fantasy_team_id = :fantasy_team_id
+        """)
+
+        result = conn.execute(query, {"player_id": player_team.player_id, "fantasy_team_id": player_team.fantasy_team_id}).fetchone()
+
+        if result is None:
+            error_msg = "Player is not on this team."
+            raise HTTPException(422, error_msg)
+
+        bal_subq = """
+                select fantasy_team_balance
+                from fantasy_teams
+                where fantasy_teams.fantasy_team_id = (:id)
+                for share
+                """
+        val_subq = """
+                select player_value
+                from players
+                where players.player_id = (:p_id)
+                for share
+                """
+        
+        try:
+            balance = conn.execute(sqlalchemy.text(bal_subq),{'id':player_team.fantasy_team_id}).scalar_one()
+            value = conn.execute(sqlalchemy.text(val_subq),{'p_id':player_team.player_id}).scalar_one()
+        except NoResultFound as e:
+            raise HTTPException(422, "Player or fantasy team not found.")
+
+
+        reemburse = """
+            update fantasy_teams
+            set fantasy_team_balance = (:new_bal)
+            where fantasy_team_id = (:id)
+            """
+
         sql = """
             delete from player_fantasy_team
             where player_id = (:player_id) and fantasy_team_id = (:fantasy_team_id)
@@ -116,6 +172,8 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 
         try:
             conn.execute(sqlalchemy.text(sql),params)
+            conn.execute(sqlalchemy.text(reemburse),{'new_bal': balance+value,
+                                                    'id': player_team.fantasy_team_id})
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
@@ -180,6 +238,7 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
     This endpoint adds a user to a fantasy league
     It updates the league_id column of a team
     """
+
 
     with db.engine.begin() as conn:
 
