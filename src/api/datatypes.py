@@ -18,7 +18,6 @@ class Player:
 class Fantasy_Team:
     fantasy_team_name: str
     user_id: int
-    fantasy_league_id: int
 
 @pydantic.dataclasses.dataclass
 class Friend:
