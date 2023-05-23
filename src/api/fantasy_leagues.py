@@ -18,12 +18,15 @@ def create_fantasy_league(new_fantasy_league: datatypes.fantasy_league):
     """
 
     insert_statement = """
-    INSERT INTO fantasy_leagues (fantasy_league_name)
-    VALUES ((:new_name))
+    INSERT INTO fantasy_leagues (fantasy_league_name,fantasy_league_budget)
+    VALUES ((:new_name), (:budget))
     returning fantasy_league_id
     """
 
-    params = {'new_name':new_fantasy_league.fantasy_league_name}
+    params = {
+                'new_name':new_fantasy_league.fantasy_league_name,
+                'budget':new_fantasy_league.fantasy_league_budget
+              }
 
     with db.engine.begin() as conn:
         try:
@@ -68,7 +71,7 @@ def list_fantasy_leagues(fantasy_league_name: str = "",
                 res_json.append({
                     "fantasy_league_id":row.fantasy_league_id,
                     "fantasy_league_name":row.fantasy_league_name,
-                    "created_at":row.created_at,
+                    "fantasy_league_budget":row.fantasy_league_budget
                 })
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
