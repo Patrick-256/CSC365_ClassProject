@@ -19,7 +19,8 @@ def add_player(name: str, irl_team_name: str, position: str, value: int):
     """
     This endpoint adds a player to the database
     * `player_name`: the name of the player
-    * `player_position`: the position of the player
+    * `player_position`: the position of the player Can be any of the following:
+        GK, LB, CB, RB, CDM, CM, CAM, CF, ST, LM, RM, LW, RW, LWB, RWB
     * `irl_team_name`: the real life team of the player
     * 'player_value': the value of the player
     """
@@ -211,9 +212,7 @@ def get_player(id: int):
 class player_sort_options(str, Enum):
     goals = "num_goals"
     assists = "num_assists"
-    shots = "num_shots"
     shots_on_goal = "num_shots_on_goal"
-    games_played = "num_games_played"
     turnovers = "num_turnovers"
     value = "player_value"
 
