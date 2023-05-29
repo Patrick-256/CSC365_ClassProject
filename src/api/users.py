@@ -17,17 +17,26 @@ def add_user(new_user: datatypes.User):
     This endpoint adds a user to the database
     """
 
-    insert_statement = """
-    INSERT INTO users (user_name, is_admin, password)
-    VALUES ((:user_name), (:is_admin), (:password))
-    returning user_id
-    """
-    params = {'user_name':new_user.user_name,
-              'is_admin':new_user.is_admin,
-              'password': hash_password(new_user.password)
-              }
+    check_user_exists = """
+                select user_name from users
+                where user_name = (:username)
+                """
+    with db.engine.begin() as conn:   
+        user_exists = conn.execute(sqlalchemy.text(check_user_exists),{"username":new_user.user_name}).fetchone()
 
-    with db.engine.begin() as conn:
+        if user_exists is not None:
+            raise HTTPException(422, "user_name already exists.")
+
+        insert_statement = """
+        INSERT INTO users (user_name, is_admin, password)
+        VALUES ((:user_name), (:is_admin), (:password))
+        returning user_id
+        """
+        params = {'user_name':new_user.user_name,
+                'is_admin':new_user.is_admin,
+                'password': hash_password(new_user.password)
+                }
+
         try:
             new_user_id = conn.execute(sqlalchemy.text(insert_statement),params).scalar_one()
         except sqlalchemy.exc.IntegrityError as e:
