@@ -5,6 +5,11 @@ class User:
     user_name: str
     is_admin: bool
     password: str
+
+@pydantic.dataclasses.dataclass
+class UserLogin:
+    user_name: str
+    password: str
     
 @pydantic.dataclasses.dataclass
 class Player:

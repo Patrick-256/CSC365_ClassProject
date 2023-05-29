@@ -84,8 +84,8 @@ def list_users(user_name: str = "",
         return res_json
     
 
-@router.get("/users/login",tags=["users"])
-def login(username: str, password: str):
+@router.post("/users/login",tags=["users"])
+def login(userLogin:datatypes.UserLogin):
     """
     authorizes a user by username and password
     """
@@ -103,14 +103,14 @@ def login(username: str, password: str):
             where user_name = (:username)
             """
         
-        user_result = conn.execute(sqlalchemy.text(user_subq),{"username":username}).fetchone()
+        user_result = conn.execute(sqlalchemy.text(user_subq),{"username":userLogin.user_name}).fetchone()
 
         if user_result is None:
             raise HTTPException(422, "User not found.")
 
-        pwd = conn.execute(sqlalchemy.text(sql), {'username': username}).scalar_one()
+        pwd = conn.execute(sqlalchemy.text(sql), {'username': userLogin.user_name}).scalar_one()
 
-    if hash_password(password) == pwd:
+    if hash_password(userLogin.password) == pwd:
 
         return {"Login successful."}
     
