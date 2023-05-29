@@ -20,9 +20,8 @@ router = APIRouter()
 @router.post("/fantasy_teams/", tags=["fantasy_teams"])
 def create_fantasy_team(team: datatypes.Fantasy_Team):
     """
-    Adds a new fantasy team with the
-    specified name and user id. If no league id is provided,
-    the league id will be set to null.
+    Creates a new fantasy team with the
+    specified name and user id.
     Team balance is auto set to $10,000,000
     """
     
