@@ -15,6 +15,11 @@ router = APIRouter()
 def add_user(new_user: datatypes.User):
     """
     This endpoint adds a user to the database
+    `user_name`: desired username (must be unique)
+    `is_admin`: wether this user is admin or not
+    `password`: password
+
+    returns the id of the user created
     """
 
     check_user_exists = """
@@ -56,6 +61,8 @@ def list_users(user_name: str = "",
     `user_name` - show users whose user_name matches the given string
     `limit`  - how many users to show
     `offset` - how many users to skip over
+
+    returns a list of users
     """
 
     users_query = """
@@ -97,6 +104,8 @@ def list_users(user_name: str = "",
 def login(userLogin:datatypes.UserLogin):
     """
     authorizes a user by username and password
+
+    returns login successful or login failed depending on if password matches
     """
 
     sql = """

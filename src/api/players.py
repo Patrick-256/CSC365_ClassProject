@@ -222,6 +222,10 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
                 limit: int = Query(50, ge=1, le=250)):
     """
     list players in order of the specified sort up to the limit
+    can sort by: number of goals, number of assists, number of shots on goal,
+    number of turnovers or player value.
+
+    returns a sorted list of players
     """
 
     with db.engine.connect() as conn:

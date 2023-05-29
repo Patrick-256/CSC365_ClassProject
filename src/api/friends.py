@@ -17,6 +17,8 @@ def add_friend(new_friendship: datatypes.Friend):
     adds a friendship between two user ids.
     user ids must exist in the Users table and there must not 
     be an existing friendship between them.
+
+    returns the user id's if successful
     """
 
     #check that the user ids are not the same
@@ -81,6 +83,9 @@ def list_friends(user_id: Optional[int] = Query(None),
     `user_id` - show the friendships this user_id is a part of.
     `limit`  - how many users to show
     `offset` - how many users to skip over
+
+    returns a list of friendships represented as:
+    user1_id,user2_id where each user id are friends with each other
     """
 
     friends_query = """
