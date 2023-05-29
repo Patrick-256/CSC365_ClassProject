@@ -53,6 +53,8 @@ def list_fantasy_leagues(fantasy_league_name: str = "",
     `fantasy_league_name` - show leagues whose league name matches the given string
     `limit`  - how many leagues to show
     `offset` - how many leagues to skip over
+
+    returns an array of fantasy leagues
     """
 
     sql = """
@@ -91,6 +93,8 @@ def get_top_teams_in_fantasy_league(id: int):
     Lists teams in the specified league in order of total points.
     Total points is calculated based on the following formula:
     total_points = num_goals*5 + num_assists*3 + num_passes*0.05 + num_shots_on_goal*0.2 - num_turnovers*0.2
+
+    returns an array of fantasy leagues
     """
 
 

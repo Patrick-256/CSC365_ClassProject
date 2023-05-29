@@ -25,6 +25,8 @@ def add_game(game: datatypes.Game):
     number of total shots on goal
     number of total passes
     number of total turnovers
+
+    returns id of the game added.
     """
 
     if game.num_goals < 0 or game.num_goals is None:

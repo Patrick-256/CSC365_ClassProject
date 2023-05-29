@@ -21,8 +21,14 @@ router = APIRouter()
 def create_fantasy_team(team: datatypes.Fantasy_Team):
     """
     Creates a new fantasy team with the
-    specified name and user id.
+    specified team name and user id.
+    
+    `fantasy_team_name`: name of the fantasy team
+    `user_id`: id of the user that owns this fantasy team
+
     Team balance is auto set to $10,000,000
+
+    returns the id of the created fantasy_team
     """
     
     with db.engine.begin() as conn:
@@ -51,7 +57,12 @@ def create_fantasy_team(team: datatypes.Fantasy_Team):
 @router.post("/fantasy_teams/players", tags=["fantasy_teams"])
 def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
     """
-    adds a player to the specified fantasy team
+    adds a player to the specified fantasy team.
+
+    `player_id`: player id in which to add to the team
+    `fantasy_team_id`: team id in which to add the player to
+
+    returns player id and team id that the player was added to
     """
 
     with db.engine.begin() as conn:
@@ -130,6 +141,8 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
 def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
     """
     removes a player from the specified fantasy team
+
+    returns the player id that was removed and the team id the player was removed from
     """
 
     with db.engine.begin() as conn:
@@ -197,7 +210,7 @@ def remove_player_from_fantasy_team(player_team: datatypes.PlayerTeam):
 @router.get("/fantasy_teams/{fantasy_team_id}/score", tags=["fantasy_teams"])
 def get_fantasy_team_score(fantasy_team_id: int):
     """
-    return the score of the specified fantasy team,
+    returns the score of the specified fantasy team,
     which is a sum of the team's player scores
     """
     
@@ -249,6 +262,8 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
     This endpoint adds a user to a fantasy league
     It updates the league_id column of a team
+
+    returns the team id and the league id
     """
 
 
