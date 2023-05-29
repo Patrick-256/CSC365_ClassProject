@@ -232,14 +232,14 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
             players.player_name, 
             players.player_position,
             players.irl_team_name,
-            CONCAT('$', COALESCE(TO_CHAR(players.player_value, 'FM999,999,999,999'), 'NULL')) AS player_value,
+            CONCAT('$', TO_CHAR(players.player_value, 'FM999,999,999,999')) AS player_value,
             SUM(games.num_goals) AS num_goals,
             SUM(games.num_assists) AS num_assists,
             SUM(games.num_passes) AS num_passes,
             SUM(games.num_shots_on_goal) AS num_shots_on_goal,
             SUM(games.num_turnovers) AS num_turnovers
             FROM
-                players
+            players
             JOIN games ON games.player_id = players.player_id
             GROUP BY
                 players.player_id, 
@@ -247,7 +247,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
                 players.player_position,
                 players.irl_team_name,
                 players.player_value
-            ORDER BY {} desc
+            ORDER BY {} desc, players.plaver_value desc
             limit (:limit)
             """.format(sort.value)
       

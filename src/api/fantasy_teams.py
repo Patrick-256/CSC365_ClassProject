@@ -268,9 +268,13 @@ def add_team_to_fantasy_league(team_id: int, league_id: int):
 
         try:
             league_budget = conn.execute(sqlalchemy.text(league_budget_subq),{'league_id':league_id}).scalar_one()
+        except NoResultFound as e:
+            raise HTTPException(422, "Fantasy league not found.")
+        
+        try:
             team_value = conn.execute(sqlalchemy.text(team_value_subq),{'team_id':team_id}).scalar_one()
         except NoResultFound as e:
-            raise HTTPException(422, "League or fantasy team not found.")
+            raise HTTPException(422, "Fantasy team not found.")
 
         sql = """
             update fantasy_teams
