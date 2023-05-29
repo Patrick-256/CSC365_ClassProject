@@ -84,7 +84,7 @@ def list_users(user_name: str = "",
                     "user_id":row.user_id,
                     "user_name":row.user_name,
                     "is_admin":row.is_admin,
-                    "created_at":row.created_at,
+                    "created_at":row.created_at
                 })
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
