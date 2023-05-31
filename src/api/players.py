@@ -213,6 +213,7 @@ class player_sort_options(str, Enum):
     goals = "num_goals"
     assists = "num_assists"
     shots_on_goal = "num_shots_on_goal"
+    passes = "num_passes"
     turnovers = "num_turnovers"
     value = "player_value"
 
