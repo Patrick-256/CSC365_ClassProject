@@ -71,6 +71,7 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
                 select count(*)
                 from player_fantasy_team
                 where player_fantasy_team.fantasy_team_id = :ftid
+                for share
         """
 
         player_count_result = conn.execute(sqlalchemy.text(player_count),{'ftid': player_team.fantasy_team_id}).scalar()
@@ -260,7 +261,7 @@ def get_fantasy_team_score(fantasy_team_id: int):
 @router.put("/fantasy_teams/{fantasy_league_id}/join", tags=["fantasy_teams"])
 def add_team_to_fantasy_league(team_id: int, league_id: int):
     """
-    This endpoint adds a user to a fantasy league
+    This endpoint adds a fantasy team to a fantasy league
     It updates the league_id column of a team
 
     returns the team id and the league id
