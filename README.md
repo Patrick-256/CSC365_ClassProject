@@ -21,26 +21,26 @@ Users can create an account, add friends, manage multiple fantasy teams, and cre
 
 ## Installation
 
-To install the required resources to contribute to the API:
+To install the required resources to contribute to the API, please run the following commands in the terminal:
 
    - Clone the repository:
-Run ‘git clone https://github.com/Patrick-256/CSC365_FantasySoccer.git’
+git clone https://github.com/Patrick-256/CSC365_FantasySoccer.git
 
    - Install the dependencies:
-Run ‘pip install requirements.txt’
+pip install requirements.txt
 
    -  Install alembic for database migrations:
-Run ‘pip install alembic’
-Run ‘alembic init alembic’
+pip install alembic
+alembic init alembic
 Follow the instructions here for creating and running migrations scripts
 
    - Set up the Vercel CLI to test endpoint and deployment:
-Run ‘npx i -g vercel’
-Run ‘npx i -g vercel@latest’
+npx i -g vercel
+npx i -g vercel@latest
 Follow the instructions here for further information
 
    - Install Docker to run on a local database
-Install Docker
+Download and install Docker from its offical website: www.docker.com
 Follow the instructions here for setting up your local database
 
 
