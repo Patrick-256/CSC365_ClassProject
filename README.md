@@ -10,7 +10,7 @@ Welcome to our Fantasy Soccer API! Check out the features below to get started!
 - [Resources](#resources)
 - [Credits](#credits)
 
-##About
+## About
 
 Fantasy Soccer API makes it possible for a user to create fantasy teams, and choose real players to add to their team. Users can also create leagues, where multiple teams can compete with each other as they are ranked by the real life performances of their players. 
 
@@ -51,6 +51,7 @@ The project will start and be accessible at `http://localhost:3001`.
 
 Alternatively, open a web browser and go to: fantasy-soccer-api.vercel.app to run the production version of the project. Add /docs to the url to see all endpoints.
 
+
 ## Configuration
 
 To configure the project, follow these steps:
@@ -69,10 +70,7 @@ To configure the project, follow these steps:
 By default, the project uses the development environment. You can modify the configuration in the `.env` file.
 
 
-
-
-
-##Resources
+## Resources
 
 To construct our database, deploy our project, and create our diagrams, we used the following resources:
 
@@ -84,7 +82,7 @@ To construct our database, deploy our project, and create our diagrams, we used 
    - PostgresSQL
 
 
-##Credits
+## Credits
 Patrick Whitlock   pwhitloc@calpoly.edu
 Ashton Alonge     aalonge@calpoly.edu  
 
