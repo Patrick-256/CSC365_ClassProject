@@ -31,17 +31,22 @@ pip install requirements.txt
 
    -  Install alembic for database migrations:
 pip install alembic
+
+   -  Initialize alembic for database migrations:
 alembic init alembic
-Follow the instructions here for creating and running migrations scripts
+
+Follow the instructions here for creating and running migrations scripts: https://alembic.sqlalchemy.org/en/latest/tutorial.html
 
    - Set up the Vercel CLI to test endpoint and deployment:
-npx i -g vercel
-npx i -g vercel@latest
-Follow the instructions here for further information
+npx i -g vercel  
+   - Also run: npx i -g vercel@latest
+
+Follow the instructions here for further information: https://vercel.com/docs/cli
 
    - Install Docker to run on a local database
 Download and install Docker from its offical website: www.docker.com
-Follow the instructions here for setting up your local database
+
+Follow the instructions here for setting up your local database: https://supabase.com/docs/guides/cli
 
 
 ## Usage
@@ -49,7 +54,7 @@ Follow the instructions here for setting up your local database
 To use Fantasy Soccer API, run the following command: ‘vercel dev’
 The project will start and be accessible at `http://localhost:3001`.
 
-Alternatively, open a web browser and go to: fantasy-soccer-api.vercel.app to run the production version of the project. Add /docs to the url to see all endpoints.
+Alternatively, open a web browser and go to: fantasy-soccer-api.vercel.app to run the production version of the project. Add /docs to the end of the url to see all endpoints.
 
 
 ## Configuration
@@ -83,8 +88,8 @@ To construct our database, deploy our project, and create our diagrams, we used 
 
 
 ## Credits
-Patrick Whitlock   pwhitloc@calpoly.edu
 Ashton Alonge     aalonge@calpoly.edu  
 
+Patrick Whitlock   pwhitloc@calpoly.edu
+
 If you have any questions, issues, or feedback, feel free to contact us!
----
