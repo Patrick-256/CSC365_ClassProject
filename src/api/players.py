@@ -28,6 +28,9 @@ def add_player(name: str, irl_team_name: str, position: str, value: int):
     if(value <= 0):
         raise HTTPException(422, "Value must be greater than $0")
     
+    if(value > 10000000):
+        raise HTTPException(422, "Value must be less than $10,000,000")
+    
     with db.engine.begin() as conn:
 
         
