@@ -120,7 +120,7 @@ def get_game_info(game_id: int):
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
         
-        if result is None:
+        if result is None or result == []:
              raise HTTPException(422, "Game not found.")
         
         player_stats = []

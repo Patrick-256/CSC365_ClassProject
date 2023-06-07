@@ -132,6 +132,16 @@ def get_player(id: int):
 
     with db.engine.connect() as conn:
 
+        player_subq = """
+            select player_id from players
+            where player_id = (:player_id)
+            """
+        
+        player_subq_result = conn.execute(sqlalchemy.text(player_subq),{"player_id":id}).fetchone()
+
+        if player_subq_result is None:
+            raise HTTPException(422, "Player not found.")
+
         game_subq = """
             select player_id from games
             where player_id = (:player_id)
@@ -252,7 +262,7 @@ def get_players(sort: player_sort_options = player_sort_options.goals,
                 players.player_position,
                 players.irl_team_name,
                 players.player_value
-            ORDER BY {} desc, players.plaver_value desc
+            ORDER BY {} desc, players.player_value desc
             limit (:limit)
             """.format(sort.value)
       
