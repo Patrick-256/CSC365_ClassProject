@@ -99,7 +99,7 @@ def get_top_teams_in_fantasy_league(id: int):
 
 
     sql = """SELECT 
-                fantasy_teams.fantasy_team_id,
+                fantasy_teams.fantasy_team_id, fantasy_teams.fantasy_team_name,
                 SUM(games.num_goals * 5 + games.num_assists * 3 + games.num_passes * 0.05 + games.num_shots_on_goal * 0.2 - games.num_turnovers * 0.2) AS total_points
             FROM fantasy_teams
             JOIN player_fantasy_team ON fantasy_teams.fantasy_team_id = player_fantasy_team.fantasy_team_id
@@ -117,10 +117,15 @@ def get_top_teams_in_fantasy_league(id: int):
             for row in result:
                 res_json.append({
                     "fantasy_team_id": row.fantasy_team_id,
+                    "fantasy_team_name":row.fantasy_team_name,
                     "total_points": row.total_points,
                 })
         except sqlalchemy.exc.IntegrityError as e:
             error_msg = e.orig.diag.message_detail
             raise HTTPException(422, error_msg)
+        
+        if(res_json == []):
+            return "fantasy league does not exist or there are no teams in this fantasy league"
+        
     
     return res_json
