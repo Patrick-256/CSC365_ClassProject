@@ -71,7 +71,6 @@ def add_player_to_fantasy_team(player_team: datatypes.PlayerTeam):
                 select count(*)
                 from player_fantasy_team
                 where player_fantasy_team.fantasy_team_id = :ftid
-                for share
         """
 
         player_count_result = conn.execute(sqlalchemy.text(player_count),{'ftid': player_team.fantasy_team_id}).scalar()

@@ -1,5 +1,7 @@
 from fastapi import FastAPI
 from src.api import pkg_util, users,players,fantasy_teams,friends,fantasy_leagues,games
+from starlette.middleware.cors import CORSMiddleware
+
 
 description = """
 Fantasy Soccer API allows users to simulate a fantasy soccer league.
@@ -95,6 +97,15 @@ app.include_router(pkg_util.router)
 app.include_router(players.router)
 app.include_router(users.router)
 
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
