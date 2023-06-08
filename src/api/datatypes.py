@@ -13,7 +13,6 @@ class UserLogin:
     
 @pydantic.dataclasses.dataclass
 class Player:
-    player_id: int
     player_name: str
     player_position: str
     irl_team_name: str

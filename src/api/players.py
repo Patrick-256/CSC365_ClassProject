@@ -15,7 +15,7 @@ router = APIRouter()
 
 
 @router.post("/players/", tags=["players"])
-def add_player(name: str, irl_team_name: str, position: str, value: int):
+def add_player(newPlayer: datatypes.Player):
     """
     This endpoint adds a player to the database
     * `player_name`: the name of the player
@@ -25,10 +25,10 @@ def add_player(name: str, irl_team_name: str, position: str, value: int):
     * 'player_value': the value of the player
     """
 
-    if(value <= 0):
+    if(newPlayer.player_value <= 0):
         raise HTTPException(422, "Value must be greater than $0")
     
-    if(value > 10000000):
+    if(newPlayer.player_value > 10000000):
         raise HTTPException(422, "Value must be less than $10,000,000")
     
     with db.engine.begin() as conn:
@@ -41,10 +41,10 @@ def add_player(name: str, irl_team_name: str, position: str, value: int):
         """
 
         params = {
-            'name':name,
-            'position': position,
-            'irl_team_name': irl_team_name,
-            'value': value
+            'name':newPlayer.player_name,
+            'position': newPlayer.player_position,
+            'irl_team_name': newPlayer.irl_team_name,
+            'value': newPlayer.player_value
         }
         try:
             new_player_id = conn.execute(sqlalchemy.text(sql),params).scalar_one()
